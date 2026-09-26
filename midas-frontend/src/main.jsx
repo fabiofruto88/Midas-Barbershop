@@ -7,6 +7,7 @@ import './index.css'
 import router from './router'
 import { queryClient } from './lib/queryClient'
 import { registerServiceWorker } from './hooks/usePushNotifications'
+import AppToaster from './components/ui/AppToaster'
 
 registerServiceWorker()
 
@@ -16,6 +17,7 @@ createRoot(document.getElementById('root')).render(
       {/* Respeta prefers-reduced-motion: sin desplazamientos, solo opacidad. */}
       <MotionConfig reducedMotion="user">
         <RouterProvider router={router} />
+        <AppToaster />
       </MotionConfig>
     </QueryClientProvider>
   </StrictMode>,

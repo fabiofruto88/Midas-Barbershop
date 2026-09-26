@@ -160,7 +160,7 @@ const cancelAppointment = async (id, user, guestToken) => {
   if (count === 0) throw new AppError('Solo se pueden cancelar citas pendientes.', 400);
 };
 
-// GET /appointments/me: historial del cliente, o agenda si es barbero.
+// GET /appointments/me: historial del cliente, o del barbero (con cliente y notas técnicas de la foto).
 const listMyAppointments = async (user) => {
   const isBarber = user.role === 'BARBER';
 
@@ -174,7 +174,7 @@ const listMyAppointments = async (user) => {
       status: true,
       service: { select: { name: true } },
       barber: { select: { name: true } },
-      result: { select: { imageUrl: true } },
+      result: { select: { imageUrl: true, ...(isBarber && { notes: true }) } },
       ...(isBarber && {
         client: { select: { name: true, phone: true } },
         guestName: true,

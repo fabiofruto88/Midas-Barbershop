@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { useLocation, useParams } from 'react-router'
 import { appointmentsApi } from '../services/midas'
 import Alert from '../components/ui/Alert'
@@ -11,7 +12,10 @@ export default function GuestCancelPage() {
   const { hash } = useLocation()
   const token = hash.slice(1)
 
-  const cancel = useMutation({ mutationFn: () => appointmentsApi.cancel(id, token) })
+  const cancel = useMutation({
+    mutationFn: () => appointmentsApi.cancel(id, token),
+    onSuccess: () => toast.success('Cita cancelada'),
+  })
 
   return (
     <div className="mx-auto max-w-md">

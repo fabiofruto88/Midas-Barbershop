@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '../../services/midas'
 import { useAuth } from '../../hooks/useAuth'
@@ -85,9 +86,18 @@ function UserRow({ user }) {
 
   const changeRole = useMutation({
     mutationFn: (role) => adminApi.updateUser(user.id, { role }),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success('Rol actualizado', { description: user.name })
+      invalidate()
+    },
   })
-  const remove = useMutation({ mutationFn: () => adminApi.deleteUser(user.id), onSuccess: invalidate })
+  const remove = useMutation({
+    mutationFn: () => adminApi.deleteUser(user.id),
+    onSuccess: () => {
+      toast.success('Cuenta eliminada', { description: user.name })
+      invalidate()
+    },
+  })
   const actionError = changeRole.error ?? remove.error
 
   return (
@@ -146,7 +156,8 @@ function CreateUserForm() {
 
   const create = useMutation({
     mutationFn: adminApi.createUser,
-    onSuccess: () => {
+    onSuccess: (created) => {
+      toast.success('Cuenta creada', { description: `${created.name} ya puede ingresar.` })
       invalidate()
       setValues(emptyForm)
     },
@@ -197,7 +208,6 @@ function CreateUserForm() {
         error={errors.password}
       />
       {create.error && !create.error.details && <Alert tone="error">{create.error.message}</Alert>}
-      {create.isSuccess && <Alert tone="success">Cuenta creada.</Alert>}
       <Button type="submit" loading={create.isPending} className="w-full">
         Crear cuenta
       </Button>

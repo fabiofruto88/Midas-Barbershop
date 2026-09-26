@@ -10,6 +10,7 @@ import MyAppointmentsPage from '../pages/MyAppointmentsPage'
 import GuestCancelPage from '../pages/GuestCancelPage'
 import AgendaPage from '../pages/AgendaPage'
 import SchedulePage from '../pages/SchedulePage'
+import ServiceHistoryPage from '../pages/ServiceHistoryPage'
 import AdminLayout from '../pages/admin/AdminLayout'
 import ServicesAdminPage from '../pages/admin/ServicesAdminPage'
 import TeamAdminPage from '../pages/admin/TeamAdminPage'
@@ -36,7 +37,10 @@ const router = createBrowserRouter([
       },
       {
         element: <RequireAuth roles={['BARBER']} />,
-        children: [{ path: 'agenda/horario', element: <SchedulePage /> }],
+        children: [
+          { path: 'agenda/horario', element: <SchedulePage /> },
+          { path: 'agenda/historial', element: <ServiceHistoryPage /> },
+        ],
       },
       {
         element: <RequireAuth roles={['ADMIN']} />,

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Link } from 'react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { appointmentsApi } from '../../services/midas'
@@ -23,11 +24,13 @@ export default function ConfirmStep({ user, draft, onBooked, onSlotTaken }) {
     onSuccess: (appointment) => {
       queryClient.invalidateQueries({ queryKey: ['availability'] })
       queryClient.invalidateQueries({ queryKey: queryKeys.myAppointments })
+      toast.success('¡Reserva confirmada!', { description: 'Te esperamos en Midas.' })
       onBooked(appointment)
     },
     onError: (error) => {
       if (error.status === 409) {
         queryClient.invalidateQueries({ queryKey: queryKeys.availability(draft.barberId, draft.date) })
+        toast.error('Ese horario acaba de ser reservado', { description: 'Elige otra hora disponible.' })
         onSlotTaken()
       }
       setFieldErrors(serverFieldErrors(error))

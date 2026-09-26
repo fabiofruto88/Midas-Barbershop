@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { notificationsApi } from '../services/midas'
 
 const isSupported = () =>
@@ -55,6 +56,7 @@ export function usePushNotifications() {
         (await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toUint8Array(publicKey) }))
       await notificationsApi.subscribe(subscription.toJSON())
       setStatus('subscribed')
+      toast.success('Recordatorios activados', { description: 'Te avisaremos 15 minutos antes de cada cita.' })
     } catch (caught) {
       // Los errores del navegador (DOMException) llegan en inglés; los de la API ya vienen en español.
       setError(
@@ -75,6 +77,7 @@ export function usePushNotifications() {
       await subscription?.unsubscribe()
       await notificationsApi.unsubscribe()
       setStatus('idle')
+      toast('Recordatorios desactivados')
     } catch (caught) {
       setError(caught.message || 'No se pudieron desactivar las notificaciones.')
       setStatus('subscribed')

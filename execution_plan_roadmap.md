@@ -24,13 +24,14 @@ Este documento servirá como nuestro tracker. Iremos marcando con una `[x]` cada
 - [x] Construir flujo de reserva (Selección de Barbero -> Fecha -> Hora -> Datos/Login).
 - [x] Construir Dashboard de Cliente Registrado (Ver historial y citas futuras).
 - [x] Integrar consumo de APIs con React Query o Axios + Zustand.
-- [ ] Aplicar el diseño de Figma (`diseño-midas`) — pendiente de acceso al archivo; los estilos están centralizados en `src/index.css` (tokens) y `src/components/ui/`.
+- [x] Aplicar el diseño de Figma (`diseño-midas`) — landing verificada contra el Figma (captura comparada sección por sección); estilos en `src/index.css` (tokens) y `src/components/ui/`.
 
 ## Fase 5: Dashboard de Barberos y Gestión de Medios
 - [x] Construir Dashboard de Barbero (Vista de agenda diaria).
-- [ ] Configurar cuenta de Cloudinary y variables de entorno.
+- [x] Configurar cuenta de Cloudinary y variables de entorno.
   - [x] Variables `CLOUDINARY_*` preparadas en `.env` / `.env.example` (sin ellas la subida responde 503).
-  - [ ] Crear la cuenta de Cloudinary y rellenar las credenciales.
+  - [x] Credenciales de la cuenta rellenadas en `.env` local; subida y borrado reales verificados.
+  - [x] Entrega optimizada en el frontend (`f_auto,q_auto` + recorte `c_fill,g_auto`) vía `src/lib/images.js`.
 - [x] Implementar subida de imágenes en Backend (Multer + Cloudinary SDK) con validación de seguridad.
 - [x] Integrar subida de resultados fotográficos desde el Dashboard del Barbero.
 - [x] Mostrar galería de fotos en el historial del Cliente.
@@ -40,6 +41,7 @@ Este documento servirá como nuestro tracker. Iremos marcando con una `[x]` cada
 - [x] Crear Service Worker en React para recibir notificaciones.
 - [x] Crear flujo de suscripción del usuario (Frontend solicita permiso -> Backend guarda endpoint).
 - [x] Implementar `node-cron` en backend para revisar citas a 15 minutos de ocurrir y disparar las notificaciones Push.
+  - [x] Verificado de punta a punta en navegador real (Edge): suscripción → recordatorio → notificación mostrada por el Service Worker.
 
 ## Fase 7: Auditoría Final y Despliegue
 - [x] Pruebas de estrés y seguridad (verificar rate limits y cookies).
@@ -51,6 +53,7 @@ Este documento servirá como nuestro tracker. Iremos marcando con una `[x]` cada
 
 ## Extras (fuera del plan original)
 - [x] Panel de Administración (`/admin`): gestión de servicios y equipo (crear barberos, cambiar roles).
+- [x] Pantalla "Historial" del barbero (`/agenda/historial`): servicios completados con foto, notas y filtros; permite subir o cambiar la foto.
 - [x] Pantalla "Mi horario" para que el barbero configure su disponibilidad desde la app.
 - [x] Completar citas (`PATCH /appointments/:id/complete`) y agenda diaria (`GET /appointments/agenda`).
 - [x] Suite de pruebas de integración del backend (74 pruebas) y E2E en navegador.

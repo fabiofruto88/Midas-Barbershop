@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
 import { useAuth, useRegister } from '../hooks/useAuth'
 import { rules, serverFieldErrors, validateForm } from '../lib/validation'
@@ -34,7 +35,10 @@ export default function RegisterPage() {
     if (values.phone.trim()) payload.phone = values.phone.trim()
 
     register.mutate(payload, {
-      onSuccess: () => navigate(next, { replace: true }),
+      onSuccess: (created) => {
+        toast.success('¡Cuenta creada con éxito!', { description: `Bienvenido a Midas, ${created.name}.` })
+        navigate(next, { replace: true })
+      },
       onError: (error) => setErrors(serverFieldErrors(error)),
     })
   }

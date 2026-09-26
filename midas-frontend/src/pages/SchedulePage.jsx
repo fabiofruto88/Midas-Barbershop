@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { barberApi } from '../services/midas'
 import { queryKeys } from '../lib/queryClient'
@@ -28,6 +29,7 @@ export default function SchedulePage() {
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.myAvailability, saved)
       queryClient.invalidateQueries({ queryKey: ['availability'] })
+      toast.success('Horario guardado')
     },
   })
 
@@ -96,7 +98,6 @@ export default function SchedulePage() {
         <Alert tone="error">El {DAYS[invalidDay].toLowerCase()} la hora de inicio debe ser anterior a la de fin.</Alert>
       )}
       <Alert tone="error">{save.error?.message}</Alert>
-      {save.isSuccess && <Alert tone="success">Horario guardado.</Alert>}
 
       <Button type="submit" loading={save.isPending} disabled={invalidDay !== -1}>
         Guardar horario

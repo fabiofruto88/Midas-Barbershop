@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { appointmentsApi } from '../services/midas'
 import { queryKeys } from '../lib/queryClient'
 import { formatLongDate, formatTime, hoursUntil } from '../lib/format'
+import { optimizedImageUrl } from '../lib/images'
 import Alert from '../components/ui/Alert'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -80,6 +82,7 @@ function AppointmentCard({ appointment, cancellable = false }) {
   const cancel = useMutation({
     mutationFn: () => appointmentsApi.cancel(appointment.id),
     onSuccess: () => {
+      toast.success('Cita cancelada')
       queryClient.invalidateQueries({ queryKey: queryKeys.myAppointments })
       queryClient.invalidateQueries({ queryKey: ['availability'] })
     },
@@ -102,7 +105,7 @@ function AppointmentCard({ appointment, cancellable = false }) {
 
       {appointment.result?.imageUrl && (
         <img
-          src={appointment.result.imageUrl}
+          src={optimizedImageUrl(appointment.result.imageUrl, { width: 800, height: 800 })}
           alt={`Resultado de ${appointment.service.name}`}
           loading="lazy"
           className="aspect-square w-full rounded-control object-cover"

@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { appointmentsApi } from '../services/midas'
 import { useAuth } from '../hooks/useAuth'
 import { useBarbers } from '../hooks/useCatalog'
 import { queryKeys } from '../lib/queryClient'
+import { optimizedImageUrl } from '../lib/images'
 import { formatLongDate, formatPrice, formatTime, hoursUntil, parseDate, toDateString } from '../lib/format'
 import ResultUploader from '../components/agenda/ResultUploader'
 import StatusBadge from '../components/StatusBadge'
@@ -47,9 +49,14 @@ export default function AgendaPage() {
           </p>
         </div>
         {!isAdmin && (
-          <Button to="/agenda/horario" variant="secondary">
-            Mi horario
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button to="/agenda/historial" variant="secondary">
+              Historial
+            </Button>
+            <Button to="/agenda/horario" variant="secondary">
+              Mi horario
+            </Button>
+          </div>
         )}
       </header>
 
@@ -118,8 +125,20 @@ function AgendaItem({ appointment, showBarber, canUpload }) {
     queryClient.invalidateQueries({ queryKey: ['availability'] })
   }
 
-  const complete = useMutation({ mutationFn: () => appointmentsApi.complete(appointment.id), onSuccess: refresh })
-  const cancel = useMutation({ mutationFn: () => appointmentsApi.cancel(appointment.id), onSuccess: refresh })
+  const complete = useMutation({
+    mutationFn: () => appointmentsApi.complete(appointment.id),
+    onSuccess: () => {
+      toast.success('Cita marcada como completada')
+      refresh()
+    },
+  })
+  const cancel = useMutation({
+    mutationFn: () => appointmentsApi.cancel(appointment.id),
+    onSuccess: () => {
+      toast.success('Cita cancelada')
+      refresh()
+    },
+  })
 
   const customer = appointment.client ?? {
     name: appointment.guestName,
@@ -156,7 +175,7 @@ function AgendaItem({ appointment, showBarber, canUpload }) {
       {appointment.result && (
         <div className="flex items-start gap-4">
           <img
-            src={appointment.result.imageUrl}
+            src={optimizedImageUrl(appointment.result.imageUrl, { width: 192, height: 192 })}
             alt={`Resultado de ${customer.name}`}
             loading="lazy"
             className="size-24 rounded-control object-cover"

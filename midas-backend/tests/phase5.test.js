@@ -140,7 +140,17 @@ describe('POST /appointments/:id/results', () => {
 
     // El cliente la ve en su historial.
     const history = await client.get('/api/v1/appointments/me');
-    assert.equal(history.body.find((item) => item.id === appointment.id).result.imageUrl, res.body.imageUrl);
+    const clientItem = history.body.find((item) => item.id === appointment.id);
+    assert.equal(clientItem.result.imageUrl, res.body.imageUrl);
+    assert.equal(clientItem.result.notes, undefined); // las notas técnicas son del barbero
+
+    // El barbero la ve en su historial de servicios, con cliente y notas.
+    const barberHistory = await barber.client.get('/api/v1/appointments/me');
+    const barberItem = barberHistory.body.find((item) => item.id === appointment.id);
+    assert.equal(barberItem.status, 'COMPLETED');
+    assert.equal(barberItem.result.imageUrl, res.body.imageUrl);
+    assert.equal(barberItem.result.notes, 'Degradado medio');
+    assert.ok(barberItem.client);
   });
 
   test('subir otra foto reemplaza la anterior y borra la vieja de Cloudinary', async () => {

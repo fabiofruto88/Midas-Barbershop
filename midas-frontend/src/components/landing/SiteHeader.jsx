@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import { useAuth, useLogout } from '../../hooks/useAuth'
@@ -14,6 +15,7 @@ const roleLinks = {
   CLIENT: [{ to: '/mis-citas', label: 'Mis citas' }],
   BARBER: [
     { to: '/agenda', label: 'Agenda' },
+    { to: '/agenda/historial', label: 'Historial' },
     { to: '/agenda/horario', label: 'Mi horario' },
   ],
   ADMIN: [
@@ -158,7 +160,11 @@ export default function SiteHeader() {
   const panelRef = useRef(null)
   useDismiss(menuOpen, setMenuOpen, panelRef)
 
-  const handleLogout = () => logout.mutate(undefined, { onSettled: () => navigate('/') })
+  const handleLogout = () =>
+    logout.mutate(undefined, {
+      onSuccess: () => toast('Sesión cerrada', { description: 'Te esperamos pronto en Midas.' }),
+      onSettled: () => navigate('/'),
+    })
   const href = (id) => (isHome ? `#${id}` : `/#${id}`)
 
   return (

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '../../services/midas'
 import { queryKeys } from '../../lib/queryClient'
@@ -76,7 +77,10 @@ function ServiceRow({ service, onEdit }) {
   const invalidate = useInvalidateServices()
   const toggle = useMutation({
     mutationFn: () => adminApi.updateService(service.id, { isActive: !service.isActive }),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success(service.isActive ? `"${service.name}" desactivado` : `"${service.name}" activado`)
+      invalidate()
+    },
   })
 
   return (
@@ -112,7 +116,8 @@ function ServiceForm({ service, onDone }) {
 
   const save = useMutation({
     mutationFn: (payload) => (service ? adminApi.updateService(service.id, payload) : adminApi.createService(payload)),
-    onSuccess: () => {
+    onSuccess: (saved) => {
+      toast.success(service ? 'Servicio actualizado' : 'Servicio creado', { description: saved.name })
       invalidate()
       if (service) onDone()
       else setValues(emptyForm)
@@ -145,7 +150,6 @@ function ServiceForm({ service, onDone }) {
         hint="Duración fija: 60 minutos."
       />
       {save.error && !save.error.details && <Alert tone="error">{save.error.message}</Alert>}
-      {!service && save.isSuccess && <Alert tone="success">Servicio creado.</Alert>}
       <div className="flex gap-2">
         <Button type="submit" loading={save.isPending}>
           {service ? 'Guardar' : 'Crear servicio'}

@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { useMutation } from '@tanstack/react-query'
 import { appointmentsApi } from '../../services/midas'
 import Alert from '../ui/Alert'
@@ -20,7 +21,10 @@ export default function ResultUploader({ appointmentId, onUploaded, onCancel }) 
 
   const upload = useMutation({
     mutationFn: () => appointmentsApi.uploadResult(appointmentId, { file, notes }),
-    onSuccess: onUploaded,
+    onSuccess: (result) => {
+      toast.success('Foto del resultado subida', { description: 'El cliente ya puede verla en su historial.' })
+      onUploaded(result)
+    },
   })
 
   const choose = (event) => {

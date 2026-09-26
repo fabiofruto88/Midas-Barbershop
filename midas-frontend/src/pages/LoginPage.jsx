@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
 import { useAuth, useLogin } from '../hooks/useAuth'
 import { rules, validateForm } from '../lib/validation'
@@ -31,7 +32,12 @@ export default function LoginPage() {
 
     login.mutate(
       { email: values.email.trim(), password: values.password },
-      { onSuccess: (loggedIn) => navigate(requestedNext ? next : homeFor(loggedIn), { replace: true }) }
+      {
+        onSuccess: (loggedIn) => {
+          toast.success(`Hola de nuevo, ${loggedIn.name}`)
+          navigate(requestedNext ? next : homeFor(loggedIn), { replace: true })
+        },
+      }
     )
   }
 
