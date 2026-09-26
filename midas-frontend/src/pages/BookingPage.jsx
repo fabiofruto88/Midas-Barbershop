@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../hooks/useAuth'
 import { useBarbers, useServices } from '../hooks/useCatalog'
 import { useBookingStore } from '../store/bookingStore'
 import { formatLongDate, formatPrice, formatTime, toDateString } from '../lib/format'
+import { barberPortrait } from '../lib/barberPortrait'
 import ServiceList from '../components/ServiceList'
 import Step from '../components/booking/Step'
 import DateTimePicker from '../components/booking/DateTimePicker'
@@ -34,6 +35,14 @@ export default function BookingPage() {
     reset()
     navigate('/reservar/confirmada', { state: { appointment, service, barber }, replace: true })
   }
+
+  const chooseTime = useCallback(
+    (slot) => {
+      if (slot) setSlotTaken(false)
+      selectTimeSlot(slot)
+    },
+    [selectTimeSlot]
+  )
 
   const handleSlotTaken = () => {
     selectTimeSlot(null)
@@ -73,12 +82,11 @@ export default function BookingPage() {
             {barbers.map((item) => (
               <SelectableCard key={item.id} selected={item.id === barberId} onSelect={() => selectBarber(item.id)}>
                 <span className="flex items-center gap-3">
-                  <span
-                    aria-hidden
-                    className="grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 font-semibold text-brand"
-                  >
-                    {item.name.charAt(0).toUpperCase()}
-                  </span>
+                  <img
+                    src={barberPortrait(item, barbers.indexOf(item), { width: 80, height: 80 })}
+                    alt=""
+                    className="size-10 shrink-0 rounded-full object-cover"
+                  />
                   <span className="font-medium">{item.name}</span>
                 </span>
               </SelectableCard>
@@ -101,10 +109,7 @@ export default function BookingPage() {
           date={date}
           timeSlot={timeSlot}
           onDateChange={selectDate}
-          onTimeChange={(slot) => {
-            setSlotTaken(false)
-            selectTimeSlot(slot)
-          }}
+          onTimeChange={chooseTime}
         />
       </Step>
 

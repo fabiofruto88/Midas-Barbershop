@@ -30,7 +30,11 @@ const loadDaySchedule = async (db, barberId, date) => {
   return { workingSlots, takenSlots: new Set(booked.map((item) => item.timeSlot)) };
 };
 
-const isPastSlot = (date, timeSlot, now) => wallClock(date, timeSlot) <= now;
+const MINUTE_MS = 60 * 1000;
+
+// Un bloque ya no es reservable si empezó o empieza antes de la antelación mínima.
+const isTooSoon = (date, timeSlot, now) =>
+  wallClock(date, timeSlot).getTime() - now.getTime() < Math.max(config.bookingMinLeadMinutes * MINUTE_MS, 1);
 
 // Último día reservable: evita que se bloquee la agenda con reservas a años vista.
 const lastBookableDate = (now) => toDateString(new Date(now.getTime() + config.bookingWindowDays * DAY_MS));
@@ -43,7 +47,7 @@ const getAvailability = async ({ barberId, date }) => {
   let availableSlots = [];
   if (date >= toDateString(now) && date <= lastBookableDate(now)) {
     const { workingSlots, takenSlots } = await loadDaySchedule(prisma, barberId, date);
-    availableSlots = workingSlots.filter((slot) => !takenSlots.has(slot) && !isPastSlot(date, slot, now));
+    availableSlots = workingSlots.filter((slot) => !takenSlots.has(slot) && !isTooSoon(date, slot, now));
   }
 
   return { date, barberId, availableSlots };
@@ -52,9 +56,13 @@ const getAvailability = async ({ barberId, date }) => {
 // POST /appointments con bloqueo pesimista.
 const createAppointment = async (input, user) => {
   const { barberId, serviceId, date, timeSlot } = input;
+  // Reservan los clientes y los invitados; el personal (admin/barbero) gestiona citas, no las pide.
+  if (user && user.role !== 'CLIENT') {
+    throw new AppError('Las cuentas de administrador o barbero no pueden reservar citas.', 403);
+  }
   const isClient = user?.role === 'CLIENT';
 
-  // Cliente con sesión → la cita es suya. Invitado (o staff reservando para alguien) → datos de invitado.
+  // Cliente con sesión → la cita es suya. Invitado → datos de invitado.
   const owner = isClient
     ? { clientId: user.id, guestName: null, guestPhone: null, guestEmail: null }
     : { clientId: null, guestName: input.guestName, guestPhone: input.guestPhone, guestEmail: input.guestEmail ?? null };
@@ -66,7 +74,12 @@ const createAppointment = async (input, user) => {
   await getServiceById(serviceId, { includeInactive: false });
 
   const now = nowInBusinessZone();
-  if (isPastSlot(date, timeSlot, now)) throw new AppError('No se puede reservar en un horario que ya pasó.', 400);
+  if (isTooSoon(date, timeSlot, now)) {
+    throw new AppError(
+      `Ese horario ya pasó o está muy próximo: reserva con al menos ${config.bookingMinLeadMinutes} minutos de antelación.`,
+      400
+    );
+  }
   if (date > lastBookableDate(now)) {
     throw new AppError(`Solo se puede reservar con hasta ${config.bookingWindowDays} días de antelación.`, 400);
   }

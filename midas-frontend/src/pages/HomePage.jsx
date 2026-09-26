@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router'
+import { useBookingAccess } from '../hooks/useAuth'
 import HeroSection from '../components/landing/HeroSection'
 import HighlightStrip from '../components/landing/HighlightStrip'
 import ServicesSection from '../components/landing/ServicesSection'
@@ -11,6 +12,8 @@ import FinalCta from '../components/landing/FinalCta'
 
 export default function HomePage() {
   const { hash } = useLocation()
+  // El personal (admin/barbero) no reserva: no ve la terminal de reserva ni la llamada final.
+  const { canBook } = useBookingAccess()
 
   // Al llegar desde otra página con /#seccion, el router no hace scroll al ancla.
   useEffect(() => {
@@ -22,11 +25,11 @@ export default function HomePage() {
       <HeroSection />
       <HighlightStrip />
       <ServicesSection />
-      <BookingSection />
+      {canBook && <BookingSection />}
       <GallerySection />
       <TestimonialsSection />
       <LocationSection />
-      <FinalCta />
+      {canBook && <FinalCta />}
     </>
   )
 }

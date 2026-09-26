@@ -53,6 +53,9 @@ Los errores siempre responden `{ "error": "mensaje" }` (las validaciones añaden
   ocupado por una cita cancelada, esta se elimina dentro de la misma transacción.
 - **Zona horaria:** "hoy", los bloques pasados y la regla de 5 horas se calculan en
   `BUSINESS_TIMEZONE` (por defecto `America/Bogota`), no en la zona del servidor.
+- **Antelación mínima:** un bloque de hoy solo se ofrece y se acepta si empieza dentro de al menos
+  `BOOKING_MIN_LEAD_MINUTES` minutos (30 por defecto); si no, la reserva responde 400.
+- **Quién reserva:** clientes registrados e invitados. Una sesión de admin o barbero recibe 403.
 - **Horizonte de reserva:** solo se reserva hasta `BOOKING_WINDOW_DAYS` días (60 por defecto); más allá la
   disponibilidad sale vacía y la reserva responde 400.
 - **Picos de carga:** antes de abrir la transacción se valida sin bloqueo (los intentos sobre un bloque ya

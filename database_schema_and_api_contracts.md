@@ -168,6 +168,8 @@ Crea una nueva reserva. El backend aplica *Pessimistic Locking* aquí.
 *   **Request Body (Guest / Invitado):** Añade `guestName`, `guestPhone`, `guestEmail`.
 *   **Response (201 Created):** Retorna el objeto `Appointment`.
 *   **Error (409 Conflict):** `{"error": "El horario seleccionado ya no está disponible."}`
+*   **Error (400):** bloque pasado o que empieza en menos de `BOOKING_MIN_LEAD_MINUTES` (30 por defecto).
+*   **Error (403):** la sesión es de un admin o barbero (solo reservan clientes e invitados).
 
 #### `PATCH /appointments/:id/cancel`
 Cancela una cita. Solo permitida si faltan > 5 horas.

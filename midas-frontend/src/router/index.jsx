@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 import RootLayout from '../layouts/RootLayout'
 import RequireAuth from '../components/RequireAuth'
+import BookingOnly from '../components/BookingOnly'
 import HomePage from '../pages/HomePage'
 import BookingPage from '../pages/BookingPage'
 import BookingConfirmedPage from '../pages/BookingConfirmedPage'
@@ -24,8 +25,13 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'reservar', element: <BookingPage /> },
-      { path: 'reservar/confirmada', element: <BookingConfirmedPage /> },
+      {
+        element: <BookingOnly />,
+        children: [
+          { path: 'reservar', element: <BookingPage /> },
+          { path: 'reservar/confirmada', element: <BookingConfirmedPage /> },
+        ],
+      },
       { path: 'login', element: <LoginPage /> },
       { path: 'registro', element: <RegisterPage /> },
       { path: 'cancelar/:id', element: <GuestCancelPage /> },

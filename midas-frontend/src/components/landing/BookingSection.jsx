@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { useQueries } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
-import { useBarbers, useServices } from '../../hooks/useCatalog'
+import { availabilityQueryOptions, useBarbers, useServices } from '../../hooks/useCatalog'
 import { useBookingStore } from '../../store/bookingStore'
 import { appointmentsApi } from '../../services/midas'
 import { queryKeys } from '../../lib/queryClient'
@@ -148,7 +148,7 @@ export default function BookingSection() {
       queryKey: queryKeys.availability(barberId, value),
       queryFn: () => appointmentsApi.availability({ barberId, date: value }),
       enabled: Boolean(barberId),
-      staleTime: 15 * 1000,
+      ...availabilityQueryOptions,
     })),
   })
 
@@ -156,6 +156,12 @@ export default function BookingSection() {
   const selectedDay = availability[selectedIndex]
   const slots = selectedDay?.data?.availableSlots ?? []
   const todaySlots = availability[dayValues.indexOf(today)]?.data?.availableSlots
+
+  // Si la hora elegida deja de estar disponible (ya pasó o la tomó otra persona), se descarta.
+  const loadedSlots = selectedDay?.data?.availableSlots
+  useEffect(() => {
+    if (timeSlot && loadedSlots && !loadedSlots.includes(timeSlot)) selectTimeSlot(null)
+  }, [timeSlot, loadedSlots, selectTimeSlot])
 
   const barber = barbers?.find((item) => item.id === barberId)
   const service = services?.find((item) => item.id === serviceId)

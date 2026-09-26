@@ -4,6 +4,7 @@ import heroImage from '../../assets/landing/hero-barber.jpg'
 import iconArrow from '../../assets/landing/icon-arrow-right-dark.svg'
 import iconDiamond from '../../assets/landing/icon-diamond.svg'
 import iconAward from '../../assets/landing/icon-award.svg'
+import { useBookingAccess } from '../../hooks/useAuth'
 import Button from '../ui/Button'
 import Icon from './Icon'
 
@@ -15,6 +16,7 @@ const enter = (delay) => ({
 })
 
 export default function HeroSection() {
+  const { canBook, staffHome } = useBookingAccess()
   return (
     <section
       aria-labelledby="hero-title"
@@ -57,12 +59,14 @@ export default function HeroSection() {
 
             <motion.div {...enter(0.18)} className="flex w-full flex-col gap-4 pt-1 sm:flex-row sm:items-center">
               <Button
-                href="#reservas"
+                {...(canBook ? { href: '#reservas' } : { to: staffHome.to })}
                 variant="gold"
                 size="lg"
                 className="gap-7 shadow-[0px_4px_25px_0px_rgba(212,175,55,0.35)]"
               >
-                <span className="w-[223px] pl-5 text-center">Reservar tu cita de oro</span>
+                <span className="w-[223px] pl-5 text-center">
+                  {canBook ? 'Reservar tu cita de oro' : `Ir a ${staffHome.label.toLowerCase()}`}
+                </span>
                 <Icon src={iconArrow} className="size-3" />
               </Button>
               <Button

@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { reviewsApi } from '../../services/midas'
+import { useBookingAccess } from '../../hooks/useAuth'
 import { queryKeys } from '../../lib/queryClient'
 import { Stars } from '../ui/StarRating'
 import SectionHeading, { Accent } from './SectionHeading'
@@ -66,6 +67,7 @@ function TestimonialCard({ review, index, featured }) {
 }
 
 function Testimonials() {
+  const { canBook } = useBookingAccess()
   const { data, isPending, error } = useQuery({
     queryKey: queryKeys.publicReviews,
     queryFn: reviewsApi.published,
@@ -96,12 +98,14 @@ function Testimonials() {
         <p className="text-sm text-text-soft">
           Aún no hay reseñas publicadas. Después de tu cita podrás calificar el servicio desde "Mis citas".
         </p>
+        {canBook && (
         <Link
           to="/reservar"
           className="pressable border border-brand/50 px-6 py-2.5 text-[9px] leading-3 font-bold tracking-[0.1em] text-brand uppercase hover:border-brand hover:bg-brand/10"
         >
           Reservar mi cita
         </Link>
+        )}
       </div>
     )
   }

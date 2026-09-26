@@ -7,8 +7,9 @@ import iconVerified from '../assets/landing/icon-verified.svg'
 
 export const navLinks = [
   { id: 'servicios', label: 'Servicios' },
-  { id: 'barberos', label: 'Barberos de élite' },
-  { id: 'reservas', label: 'Reservas' },
+  // booking: secciones de reserva, ocultas para el personal (admin/barbero).
+  { id: 'barberos', label: 'Barberos de élite', booking: true },
+  { id: 'reservas', label: 'Reservas', booking: true },
   { id: 'galeria', label: 'Galería de oro' },
   { id: 'ubicacion', label: 'Ubicación' },
 ]

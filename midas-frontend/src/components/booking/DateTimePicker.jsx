@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useAvailability } from '../../hooks/useCatalog'
 import { formatShortDate, formatTime, nextDays, toDateString } from '../../lib/format'
 import Alert from '../ui/Alert'
@@ -10,6 +11,11 @@ export default function DateTimePicker({ barberId, date, timeSlot, onDateChange,
   // isPending (aún sin datos) y no isLoading: evita mostrar "no hay horarios" un instante antes de cargar.
   const { data, isPending, error } = useAvailability(barberId, date)
   const slots = data?.availableSlots ?? []
+
+  // Si la hora elegida deja de estar disponible (ya pasó o la tomó otra persona), se descarta.
+  useEffect(() => {
+    if (timeSlot && data && !data.availableSlots.includes(timeSlot)) onTimeChange(null)
+  }, [timeSlot, data, onTimeChange])
 
   return (
     <div className="space-y-5">

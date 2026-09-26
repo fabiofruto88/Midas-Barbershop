@@ -20,6 +20,19 @@ export function useAuth() {
   return { user: query.data ?? null, isPending: query.isPending }
 }
 
+// Inicio del personal: admin y barbero gestionan citas, no las reservan.
+export const STAFF_HOME = {
+  ADMIN: { to: '/admin', label: 'Administración' },
+  BARBER: { to: '/agenda', label: 'Mi agenda' },
+}
+
+// Reservan los invitados (sin sesión) y los clientes. `staffHome` es el destino del personal.
+export function useBookingAccess() {
+  const { user, isPending } = useAuth()
+  const staffHome = user ? STAFF_HOME[user.role] ?? null : null
+  return { canBook: !staffHome, staffHome, isPending }
+}
+
 function useSessionMutation(mutationFn) {
   const queryClient = useQueryClient()
   return useMutation({

@@ -27,6 +27,11 @@ try {
   throw new Error(`JWT_EXPIRES_IN inválido: "${jwtExpiresIn}". Usa un número seguido de s, m, h o d (ej. 7d).`);
 }
 
+const bookingMinLeadMinutes = Number.parseInt(process.env.BOOKING_MIN_LEAD_MINUTES ?? '30', 10);
+if (!Number.isInteger(bookingMinLeadMinutes) || bookingMinLeadMinutes < 0) {
+  throw new Error('BOOKING_MIN_LEAD_MINUTES debe ser un entero mayor o igual a 0.');
+}
+
 const bookingWindowDays = Number.parseInt(process.env.BOOKING_WINDOW_DAYS ?? '60', 10);
 if (!Number.isInteger(bookingWindowDays) || bookingWindowDays < 1) {
   throw new Error('BOOKING_WINDOW_DAYS debe ser un entero mayor que 0.');
@@ -50,6 +55,8 @@ module.exports = {
   timezone: process.env.BUSINESS_TIMEZONE || 'America/Bogota',
   // Días hacia adelante en los que se puede reservar.
   bookingWindowDays,
+  // Antelación mínima: no se ofrece un bloque que empieza en menos de estos minutos.
+  bookingMinLeadMinutes,
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: jwtExpiresIn,

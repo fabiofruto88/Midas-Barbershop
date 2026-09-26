@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Link, useLocation, useNavigate } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { useAuth, useLogout } from "../../hooks/useAuth";
+import { useAuth, useBookingAccess, useLogout } from "../../hooks/useAuth";
 import { navLinks } from "../../content/landing";
 import emblem from "../../assets/landing/midas-emblem.jpg";
 import iconUser from "../../assets/landing/icon-user.svg";
@@ -165,6 +165,9 @@ function UserMenu({ user, onLogout }) {
 
 export default function SiteHeader() {
   const { user } = useAuth();
+  const { canBook, staffHome } = useBookingAccess();
+  const links = navLinks.filter((link) => canBook || !link.booking);
+  const cta = canBook ? { to: "/reservar", label: "Reservar cita" } : staffHome;
   const logout = useLogout();
   const navigate = useNavigate();
   const location = useLocation();
@@ -196,7 +199,7 @@ export default function SiteHeader() {
           aria-label="Principal"
           className="hidden items-center gap-6 xl:flex"
         >
-          {navLinks.map((link) => {
+          {links.map((link) => {
             const current = active === link.id;
             return (
               <a
@@ -217,12 +220,12 @@ export default function SiteHeader() {
 
         <div className="flex items-center gap-4">
           <Button
-            to="/reservar"
+            to={cta.to}
             variant="goldDeep"
             size="sm"
             className="drop-shadow-[0px_4px_10px_rgba(212,175,55,0.25)] max-sm:hidden"
           >
-            Reservar cita
+            {cta.label}
           </Button>
           <UserMenu user={user} onLogout={handleLogout} />
           <button
@@ -260,7 +263,7 @@ export default function SiteHeader() {
             className="border-t border-brand/20 bg-bg px-4 pt-2 pb-6 sm:px-8 xl:hidden"
           >
             <ul>
-              {navLinks.map((link) => (
+              {links.map((link) => (
                 <li key={link.id} className="border-b border-line/30">
                   <a
                     href={href(link.id)}
@@ -275,12 +278,12 @@ export default function SiteHeader() {
               ))}
             </ul>
             <Button
-              to="/reservar"
+              to={cta.to}
               variant="gold"
               size="sm"
               className="mt-6 w-full sm:hidden"
             >
-              Reservar cita
+              {cta.label}
             </Button>
           </motion.nav>
         )}

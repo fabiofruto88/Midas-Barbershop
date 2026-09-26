@@ -1,5 +1,6 @@
 import { useServices } from '../../hooks/useCatalog'
 import { useBookingStore } from '../../store/bookingStore'
+import { useBookingAccess } from '../../hooks/useAuth'
 import { formatPrice } from '../../lib/format'
 import iconCrown from '../../assets/landing/icon-crown.svg'
 import iconScissors from '../../assets/landing/icon-scissors.svg'
@@ -20,6 +21,7 @@ const icons = [
 
 function ServiceCard({ service, index, featured }) {
   const selectService = useBookingStore((state) => state.selectService)
+  const { canBook } = useBookingAccess()
   const icon = icons[index % icons.length]
   const titleId = `servicio-${service.id}`
 
@@ -83,7 +85,7 @@ function ServiceCard({ service, index, featured }) {
           {formatPrice(service.price)}
         </p>
         {/* Preselecciona el servicio en la terminal de reserva de esta misma página. */}
-        {featured ? (
+        {!canBook ? null : featured ? (
           <a
             href="#reservas"
             onClick={() => selectService(service.id)}

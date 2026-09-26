@@ -61,11 +61,11 @@ describe('GET /appointments/availability', () => {
     assert.deepEqual(res.body.availableSlots, []);
   });
 
-  test('hoy solo muestra bloques futuros', async () => {
+  test('hoy solo muestra bloques que empiezan dentro de al menos 30 minutos', async () => {
     const today = businessDate(0);
     const res = await request(app).get(`/api/v1/appointments/availability?barberId=${barber.user.id}&date=${today}`);
-    const now = nowInBusinessZone();
-    assert.ok(res.body.availableSlots.every((slot) => wallClock(today, slot) > now));
+    const minStart = nowInBusinessZone().getTime() + 30 * 60 * 1000;
+    assert.ok(res.body.availableSlots.every((slot) => wallClock(today, slot).getTime() >= minStart));
   });
 
   test('parámetros inválidos → 400', async () => {
@@ -90,6 +90,11 @@ describe('POST /appointments', () => {
       `/api/v1/appointments/availability?barberId=${barber.user.id}&date=${FUTURE}`
     );
     assert.ok(!availability.body.availableSlots.includes('10:00'));
+  });
+
+  test('admin y barbero no pueden reservar → 403', async () => {
+    assert.equal((await book(admin, '15:00', guest(9))).status, 403);
+    assert.equal((await book(barber.client, '15:00', guest(9))).status, 403);
   });
 
   test('bloque ocupado → 409 con el mensaje del contrato', async () => {
