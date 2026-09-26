@@ -1,14 +1,19 @@
-import { contact, schedule } from '../../content/landing'
-import SectionHeading, { Accent } from './SectionHeading'
-import Reveal from './Reveal'
+import { contact, schedule } from "../../content/landing";
+import SectionHeading, { Accent } from "./SectionHeading";
+import Reveal from "./Reveal";
 
-const infoLabel = 'text-[9px] leading-3 font-bold tracking-[0.1em] text-muted uppercase'
+const infoLabel =
+  "text-[9px] leading-3 font-bold tracking-[0.1em] text-muted uppercase";
 
 export default function LocationSection() {
-  const { lat, lng } = contact.location
+  const { lat, lng } = contact.location;
 
   return (
-    <section id="ubicacion" aria-labelledby="ubicacion-title" className="bg-bg-alt py-20 lg:py-28">
+    <section
+      id="ubicacion"
+      aria-labelledby="ubicacion-title"
+      className="bg-bg-alt py-20 lg:py-28"
+    >
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-12 px-4 sm:px-8 lg:grid-cols-12 lg:gap-8 xl:px-16">
         <Reveal className="flex flex-col gap-6 self-center lg:col-span-5">
           <SectionHeading
@@ -18,7 +23,7 @@ export default function LocationSection() {
               <>
                 Visítanos en
                 <br />
-                <Accent>Barranquilla</Accent>
+                <Accent>Soledad</Accent>
               </>
             }
             className="gap-2 pt-1.5 [&>h2]:pt-0"
@@ -35,7 +40,10 @@ export default function LocationSection() {
             <div className="flex flex-col gap-1 border border-line/20 bg-card p-4">
               <dt className={infoLabel}>Teléfono y WhatsApp</dt>
               <dd className="flex flex-col text-sm leading-[22px]">
-                <a href={contact.phoneHref} className="text-brand-soft transition-colors hover:text-brand">
+                <a
+                  href={contact.phoneHref}
+                  className="text-brand-soft transition-colors hover:text-brand"
+                >
                   {contact.phone}
                 </a>
                 <a
@@ -44,16 +52,29 @@ export default function LocationSection() {
                   rel="noreferrer"
                   className="text-muted transition-colors hover:text-brand"
                 >
-                  Escribir por WhatsApp<span className="sr-only"> (se abre en una pestaña nueva)</span>
+                  Escribir por WhatsApp
+                  <span className="sr-only">
+                    {" "}
+                    (se abre en una pestaña nueva)
+                  </span>
                 </a>
               </dd>
             </div>
             <div className="flex flex-col gap-2 border border-line/20 bg-card p-4 sm:col-span-2 lg:col-span-1 xl:col-span-2">
               <dt className={infoLabel}>Horario</dt>
               {schedule.map((row) => (
-                <dd key={row.day} className="flex justify-between gap-4 text-sm leading-[22px]">
+                <dd
+                  key={row.day}
+                  className="flex justify-between gap-4 text-sm leading-[22px]"
+                >
                   <span className="text-text-soft">{row.day}</span>
-                  <span className={row.highlight ? 'text-[#e9c349]' : 'text-brand-soft'}>{row.hours}</span>
+                  <span
+                    className={
+                      row.highlight ? "text-[#e9c349]" : "text-brand-soft"
+                    }
+                  >
+                    {row.hours}
+                  </span>
                 </dd>
               ))}
             </div>
@@ -76,7 +97,8 @@ export default function LocationSection() {
               aria-hidden
               className="pointer-events-none absolute bottom-3 left-3 bg-bg/80 px-2 py-1 text-[9px] leading-[13.5px] tracking-[0.1em] text-brand/80"
             >
-              LAT {lat.toFixed(4)}° N // LON {Math.abs(lng).toFixed(4)}° W — BARRANQUILLA
+              LAT {lat.toFixed(4)}° N // LON {Math.abs(lng).toFixed(4)}° W —
+              Soledad
             </span>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-4 bg-card p-4">
@@ -95,11 +117,15 @@ export default function LocationSection() {
               rel="noreferrer"
               className="pressable border border-brand/50 bg-surface-2 px-6 py-2.5 text-[9px] leading-3 font-bold tracking-[0.1em] text-brand uppercase hover:border-brand hover:bg-brand/10"
             >
-              Cómo llegar<span className="sr-only"> (Google Maps, se abre en una pestaña nueva)</span>
+              Cómo llegar
+              <span className="sr-only">
+                {" "}
+                (Google Maps, se abre en una pestaña nueva)
+              </span>
             </a>
           </div>
         </Reveal>
       </div>
     </section>
-  )
+  );
 }
