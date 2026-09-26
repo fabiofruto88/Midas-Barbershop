@@ -22,7 +22,7 @@ export const heroBadges = [
     className: 'border-brand/30 bg-surface-2/80 text-brand shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]',
   },
   {
-    label: 'Navajas bañadas en oro 24K',
+    label: '8 años de experiencia',
     icon: iconBox,
     iconSize: 'h-[11.667px] w-[10.5px]',
     className: 'border-line/40 bg-surface-2/60 text-brand-soft',
@@ -42,9 +42,9 @@ export const heroSpecs = [
 
 export const highlights = [
   { value: '1,400+', label: 'Caballeros satisfechos' },
-  { value: '24K', label: 'Baño puro en instrumental' },
+  { value: '8 años', label: 'De experiencia en barbería' },
   { value: '100%', label: 'Privacidad confidencial' },
-  { value: '35 años', label: 'Legado de barbería clásica' },
+  { value: '1 a 1', label: 'Atención personalizada' },
 ]
 
 // Perfil editorial de los barberos por posición; el nombre y la reserva salen del API.

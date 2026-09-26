@@ -117,7 +117,7 @@ export default function HeroSection() {
               <span className="flex min-w-0 flex-col">
                 <span className="text-[9px] leading-3 font-bold tracking-[0.25em] text-brand uppercase">Ritual insignia</span>
                 <span className="font-display text-lg leading-7 font-medium text-text sm:text-xl">
-                  Oro Coloidal &amp; Acero de Toledo
+                  Navaja clásica &amp; toalla caliente
                 </span>
                 <span className="text-xs leading-[18px] tracking-[0.02em] text-muted">
                   Precisión magistral en cada afeite milimétrico.
