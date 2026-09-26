@@ -1,6 +1,12 @@
 import { api } from '../lib/api'
 
 // Endpoints del backend (ver database_schema_and_api_contracts.md).
+const imageForm = (file) => {
+  const form = new FormData()
+  form.append('image', file)
+  return form
+}
+
 const query = (params) => {
   const search = new URLSearchParams(Object.entries(params).filter(([, value]) => value))
   return search.size ? `?${search}` : ''
@@ -26,6 +32,14 @@ export const adminApi = {
   createUser: (data) => api('/users', { method: 'POST', body: data }),
   updateUser: (id, data) => api(`/users/${id}`, { method: 'PATCH', body: data }),
   deleteUser: (id) => api(`/users/${id}`, { method: 'DELETE' }),
+  uploadAvatar: (id, file) => api(`/users/${id}/avatar`, { method: 'POST', body: imageForm(file) }),
+  removeAvatar: (id) => api(`/users/${id}/avatar`, { method: 'DELETE' }),
+}
+
+export const reviewsApi = {
+  published: () => api('/reviews/public'),
+  all: () => api('/reviews'),
+  setVisible: (id, isVisible) => api(`/reviews/${id}`, { method: 'PATCH', body: { isVisible } }),
 }
 
 export const resultsApi = {
@@ -56,9 +70,9 @@ export const appointmentsApi = {
   mine: () => api('/appointments/me'),
   agenda: ({ date, barberId }) => api(`/appointments/agenda${query({ date, barberId })}`),
   complete: (id) => api(`/appointments/${id}/complete`, { method: 'PATCH' }),
+  review: (id, { rating, comment }) => api(`/appointments/${id}/review`, { method: 'PUT', body: { rating, comment } }),
   uploadResult: (id, { file, notes }) => {
-    const form = new FormData()
-    form.append('image', file)
+    const form = imageForm(file)
     if (notes?.trim()) form.append('notes', notes.trim())
     return api(`/appointments/${id}/results`, { method: 'POST', body: form })
   },

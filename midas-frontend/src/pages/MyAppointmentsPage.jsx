@@ -10,6 +10,7 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import StatusBadge from '../components/StatusBadge'
 import PushToggle from '../components/PushToggle'
+import ReviewForm from '../components/ReviewForm'
 import { PageSpinner } from '../components/ui/Spinner'
 
 const CANCELLATION_WINDOW_HOURS = 5
@@ -111,6 +112,8 @@ function AppointmentCard({ appointment, cancellable = false }) {
           className="aspect-square w-full rounded-control object-cover"
         />
       )}
+
+      {appointment.status === 'COMPLETED' && <ReviewForm appointment={appointment} />}
 
       {cancellable &&
         (canCancel ? (

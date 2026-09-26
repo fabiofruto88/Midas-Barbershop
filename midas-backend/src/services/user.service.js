@@ -2,6 +2,7 @@ const prisma = require('../config/prisma');
 const AppError = require('../utils/AppError');
 const { hashPassword } = require('./auth.service');
 const { publicUserSelect } = require('./user.select');
+const storage = require('./storage.service');
 
 const listUsers = ({ role }) =>
   prisma.user.findMany({
@@ -60,7 +61,7 @@ const updateUser = async (id, { password, ...data }, currentUserId) => {
 
 const deleteUser = async (id, currentUserId) => {
   if (id === currentUserId) throw new AppError('No puedes eliminar tu propia cuenta.', 400);
-  await getUserById(id);
+  const { avatarUrl } = await getUserById(id);
 
   const appointments = await prisma.appointment.count({
     where: { OR: [{ barberId: id }, { clientId: id }] },
@@ -73,13 +74,40 @@ const deleteUser = async (id, currentUserId) => {
     prisma.barberAvailability.deleteMany({ where: { barberId: id } }),
     prisma.user.delete({ where: { id } }),
   ]);
+  if (avatarUrl) await storage.deleteImageByUrl(avatarUrl);
+};
+
+// POST /users/:id/avatar: foto de perfil del barbero (la muestra la landing al reservar).
+const setAvatar = async (id, buffer) => {
+  const user = await getUserById(id);
+  if (user.role !== 'BARBER') throw new AppError('Solo los barberos tienen foto de perfil.', 400);
+
+  const uploaded = await storage.uploadImage(buffer, { folder: 'barbers' });
+  let updated;
+  try {
+    updated = await prisma.user.update({ where: { id }, data: { avatarUrl: uploaded.url }, select: publicUserSelect });
+  } catch (error) {
+    await storage.deleteImageByUrl(uploaded.url);
+    throw error;
+  }
+  if (user.avatarUrl) await storage.deleteImageByUrl(user.avatarUrl);
+  return updated;
+};
+
+// DELETE /users/:id/avatar: vuelve a la foto por defecto.
+const removeAvatar = async (id) => {
+  const user = await getUserById(id);
+  if (!user.avatarUrl) return user;
+  const updated = await prisma.user.update({ where: { id }, data: { avatarUrl: null }, select: publicUserSelect });
+  await storage.deleteImageByUrl(user.avatarUrl);
+  return updated;
 };
 
 // Listado público de barberos para el flujo de reserva: solo datos no sensibles.
 const listBarbers = () =>
   prisma.user.findMany({
     where: { role: 'BARBER' },
-    select: { id: true, name: true },
+    select: { id: true, name: true, avatarUrl: true },
     orderBy: { name: 'asc' },
   });
 
@@ -89,4 +117,14 @@ const ensureBarber = async (id) => {
   return barber;
 };
 
-module.exports = { listUsers, getUserById, createUser, updateUser, deleteUser, listBarbers, ensureBarber };
+module.exports = {
+  listUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+  setAvatar,
+  removeAvatar,
+  listBarbers,
+  ensureBarber,
+};

@@ -1,12 +1,9 @@
 // Contenido editorial de la pantalla principal (fuente: Figma "diseño-midas").
-// Lo operativo (servicios, barberos, horarios y galería de resultados) viene del API.
+// Lo operativo (servicios, barberos, horarios, galería y reseñas) viene del API.
 import iconStar from '../assets/landing/icon-star.svg'
 import iconBox from '../assets/landing/icon-box.svg'
 import iconShieldBadge from '../assets/landing/icon-shield-badge.svg'
 import iconVerified from '../assets/landing/icon-verified.svg'
-import iconShieldCheck from '../assets/landing/icon-shield-check.svg'
-import iconAwardSmall from '../assets/landing/icon-award-small.svg'
-import iconShield from '../assets/landing/icon-shield.svg'
 
 export const navLinks = [
   { id: 'servicios', label: 'Servicios' },
@@ -62,37 +59,6 @@ export const barberProfiles = [
   {
     specialty: 'Estilo contemporáneo & fade',
     bio: 'Texturas modernas, degradados milimétricos y visagismo.',
-  },
-]
-
-export const testimonials = [
-  {
-    quote:
-      'En Barranquilla no existe ningún lugar que combine esta meticulosidad con tal nivel de discreción. Entrar a Midas es desconectarse del ruido corporativo y salir transformado para cualquier cumbre directiva.',
-    name: 'Rodrigo de la Lama',
-    initials: 'RL',
-    role: 'Socio director Private Equity • Miembro Oro',
-    icon: iconShieldCheck,
-    iconSize: 'h-[16.667px] w-[13.333px]',
-  },
-  {
-    quote:
-      'El afeitado con navaja y las toallas calientes no son un simple corte, es una ceremonia. Alexander tiene un pulso de cirujano y un ojo estético inigualable.',
-    name: 'Fernando Morales-Arce',
-    initials: 'FM',
-    role: 'Arquitecto & coleccionista • Miembro Sovereign',
-    icon: iconAwardSmall,
-    iconSize: 'h-[17.5px] w-[13.333px]',
-    featured: true,
-  },
-  {
-    quote:
-      'La puntualidad británica y la atmósfera de club de caballeros clásico son formidables. Es el único sitio donde no miro el reloj. Un ritual indispensable antes de mis viajes internacionales.',
-    name: 'Guillermo Benítez',
-    initials: 'GB',
-    role: 'Consejero delegado • Miembro fundador',
-    icon: iconShield,
-    iconSize: 'h-[16.667px] w-[13.333px]',
   },
 ]
 

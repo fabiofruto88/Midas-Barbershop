@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '../../services/midas'
 import { useAuth } from '../../hooks/useAuth'
 import { queryKeys } from '../../lib/queryClient'
 import { rules, serverFieldErrors, validateForm } from '../../lib/validation'
+import { ACCEPTED_IMAGES, imageFileError } from '../../lib/imageFile'
+import { barberPortrait } from '../../lib/barberPortrait'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
@@ -51,9 +53,9 @@ export default function TeamAdminPage() {
           <Alert>No hay usuarios con este rol.</Alert>
         ) : (
           <ul className="space-y-3">
-            {users.map((user) => (
+            {users.map((user, index) => (
               <li key={user.id}>
-                <UserRow user={user} />
+                <UserRow user={user} index={index} />
               </li>
             ))}
           </ul>
@@ -78,7 +80,81 @@ function useInvalidateTeam() {
   }
 }
 
-function UserRow({ user }) {
+// Vista previa local de un archivo; la URL temporal se libera al cambiar de archivo o desmontar.
+function useFilePreview(file) {
+  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file])
+  useEffect(() => () => preview && URL.revokeObjectURL(preview), [preview])
+  return preview
+}
+
+// Foto del barbero en su fila: cambiarla o volver a la foto por defecto.
+function BarberPhoto({ user, index }) {
+  const invalidate = useInvalidateTeam()
+  const inputId = useId()
+  const [error, setError] = useState(null)
+
+  const upload = useMutation({
+    mutationFn: (file) => adminApi.uploadAvatar(user.id, file),
+    onSuccess: () => {
+      toast.success('Foto actualizada', { description: user.name })
+      invalidate()
+    },
+    onError: (err) => setError(err.message),
+  })
+  const remove = useMutation({
+    mutationFn: () => adminApi.removeAvatar(user.id),
+    onSuccess: () => {
+      toast.success('Se usará la foto por defecto', { description: user.name })
+      invalidate()
+    },
+    onError: (err) => setError(err.message),
+  })
+
+  const choose = (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = '' // permite volver a elegir el mismo archivo
+    if (!file) return
+    const invalid = imageFileError(file)
+    setError(invalid)
+    if (!invalid) upload.mutate(file)
+  }
+
+  const busy = upload.isPending || remove.isPending
+
+  return (
+    <div className="flex items-center gap-3">
+      <img
+        src={barberPortrait(user, index, { width: 96, height: 120 })}
+        alt={`Foto de ${user.name}`}
+        className={`h-15 w-12 shrink-0 rounded-control object-cover ${busy ? 'opacity-50' : ''}`}
+      />
+      <div className="flex flex-col items-start gap-1">
+        <label
+          htmlFor={inputId}
+          className={`cursor-pointer text-sm font-medium text-brand hover:underline has-focus-visible:outline-2 ${busy ? 'pointer-events-none opacity-50' : ''}`}
+        >
+          {upload.isPending ? 'Subiendo…' : user.avatarUrl ? 'Cambiar foto' : 'Subir foto'}
+          <input id={inputId} type="file" accept={ACCEPTED_IMAGES.join(',')} onChange={choose} className="sr-only" />
+        </label>
+        {user.avatarUrl ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => remove.mutate()}
+            className="text-xs text-muted hover:text-text disabled:opacity-50"
+          >
+            Usar foto por defecto
+          </button>
+        ) : (
+          <span className="text-xs text-muted">Foto por defecto</span>
+        )}
+        {error && <span className="text-xs text-danger">{error}</span>}
+      </div>
+    </div>
+  )
+}
+
+function UserRow({ user, index }) {
   const { user: me } = useAuth()
   const invalidate = useInvalidateTeam()
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -144,6 +220,7 @@ function UserRow({ user }) {
           </div>
         )}
       </div>
+      {user.role === 'BARBER' && <BarberPhoto user={user} index={index} />}
       <Alert tone="error">{actionError?.message}</Alert>
     </Card>
   )
@@ -151,18 +228,47 @@ function UserRow({ user }) {
 
 function CreateUserForm() {
   const invalidate = useInvalidateTeam()
+  const photoId = useId()
   const [values, setValues] = useState(emptyForm)
+  const [photo, setPhoto] = useState(null)
+  const [photoInputKey, setPhotoInputKey] = useState(0)
   const [errors, setErrors] = useState({})
+  const preview = useFilePreview(photo)
 
+  // La foto es opcional y se sube después de crear la cuenta; si falla, la cuenta queda creada igualmente.
   const create = useMutation({
-    mutationFn: adminApi.createUser,
-    onSuccess: (created) => {
+    mutationFn: async ({ payload, photo: file }) => {
+      const created = await adminApi.createUser(payload)
+      if (!file) return { created }
+      try {
+        await adminApi.uploadAvatar(created.id, file)
+        return { created }
+      } catch (photoError) {
+        return { created, photoError }
+      }
+    },
+    onSuccess: ({ created, photoError }) => {
       toast.success('Cuenta creada', { description: `${created.name} ya puede ingresar.` })
+      if (photoError) {
+        toast.warning('No se pudo subir la foto', {
+          description: `${photoError.message} Puedes subirla desde la lista del equipo.`,
+        })
+      }
       invalidate()
       setValues(emptyForm)
+      setPhoto(null)
+      setPhotoInputKey((key) => key + 1) // limpia el archivo elegido en el input
     },
     onError: (error) => setErrors(serverFieldErrors(error)),
   })
+
+  const choosePhoto = (event) => {
+    const file = event.target.files?.[0] ?? null
+    const invalid = file && imageFileError(file)
+    setErrors((current) => ({ ...current, photo: invalid || undefined }))
+    setPhoto(invalid ? null : file)
+    if (invalid) event.target.value = ''
+  }
 
   const update = (field) => (event) => {
     create.reset()
@@ -176,7 +282,7 @@ function CreateUserForm() {
     if (Object.keys(found).length) return
     const payload = { name: values.name.trim(), email: values.email.trim(), password: values.password, role: values.role }
     if (values.phone.trim()) payload.phone = values.phone.trim()
-    create.mutate(payload)
+    create.mutate({ payload, photo: values.role === 'BARBER' ? photo : null })
   }
 
   return (
@@ -207,6 +313,27 @@ function CreateUserForm() {
         onChange={update('password')}
         error={errors.password}
       />
+      {values.role === 'BARBER' && (
+        <div className="space-y-1.5">
+          <label htmlFor={photoId} className="block text-sm font-medium">
+            Foto del barbero (opcional)
+          </label>
+          <div className="flex items-center gap-3">
+            {preview && <img src={preview} alt="Vista previa" className="h-15 w-12 shrink-0 rounded-control object-cover" />}
+            <input
+              key={photoInputKey}
+              id={photoId}
+              type="file"
+              accept={ACCEPTED_IMAGES.join(',')}
+              onChange={choosePhoto}
+              className="block w-full text-sm text-muted file:mr-3 file:rounded-control file:border-0 file:bg-surface-2 file:px-3 file:py-2 file:text-sm file:text-text"
+            />
+          </div>
+          <p className={`text-xs ${errors.photo ? 'text-danger' : 'text-muted'}`}>
+            {errors.photo ?? 'JPEG, PNG o WebP de hasta 5MB. Si no subes una, se usa la foto por defecto.'}
+          </p>
+        </div>
+      )}
       {create.error && !create.error.details && <Alert tone="error">{create.error.message}</Alert>}
       <Button type="submit" loading={create.isPending} className="w-full">
         Crear cuenta

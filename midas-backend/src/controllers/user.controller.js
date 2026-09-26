@@ -22,4 +22,12 @@ const remove = async (req, res) => {
   res.status(200).json({ message: 'Usuario eliminado.' });
 };
 
-module.exports = { list, getById, create, update, remove };
+const uploadAvatar = async (req, res) => {
+  res.status(200).json(await userService.setAvatar(req.validated.params.id, req.file.buffer));
+};
+
+const removeAvatar = async (req, res) => {
+  res.status(200).json(await userService.removeAvatar(req.validated.params.id));
+};
+
+module.exports = { list, getById, create, update, remove, uploadAvatar, removeAvatar };

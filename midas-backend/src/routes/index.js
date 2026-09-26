@@ -6,6 +6,7 @@ const barberRoutes = require('./barber.routes');
 const appointmentRoutes = require('./appointment.routes');
 const notificationRoutes = require('./notification.routes');
 const resultRoutes = require('./result.routes');
+const reviewRoutes = require('./review.routes');
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/barbers', barberRoutes);
 router.use('/appointments', appointmentRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/results', resultRoutes);
+router.use('/reviews', reviewRoutes);
 
 module.exports = router;

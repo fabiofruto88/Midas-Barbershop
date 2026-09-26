@@ -230,7 +230,7 @@ describe('GET /appointments/me', () => {
     assert.equal(res.status, 200);
     assert.ok(res.body.length >= 1);
     const item = res.body[0];
-    assert.deepEqual(Object.keys(item).sort(), ['barber', 'date', 'id', 'result', 'service', 'status', 'timeSlot']);
+    assert.deepEqual(Object.keys(item).sort(), ['barber', 'date', 'id', 'result', 'review', 'service', 'status', 'timeSlot']);
     assert.match(item.date, /^\d{4}-\d{2}-\d{2}$/);
     assert.deepEqual(Object.keys(item.service), ['name']);
     assert.deepEqual(Object.keys(item.barber), ['name']);

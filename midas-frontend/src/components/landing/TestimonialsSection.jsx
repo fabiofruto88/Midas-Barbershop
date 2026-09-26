@@ -1,30 +1,39 @@
-import { testimonials } from '../../content/landing'
+import { Link } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
+import { reviewsApi } from '../../services/midas'
+import { queryKeys } from '../../lib/queryClient'
+import { Stars } from '../ui/StarRating'
 import SectionHeading, { Accent } from './SectionHeading'
-import Icon from './Icon'
 import Reveal from './Reveal'
 
-function TestimonialCard({ testimonial, index }) {
-  const { featured } = testimonial
+const initials = (name) =>
+  name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('')
+
+const averageFormatter = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+
+function TestimonialCard({ review, index, featured }) {
+  const { service, barber } = review.appointment
   return (
     <Reveal
       as="figure"
       delay={index * 0.06}
-      className={`flex flex-col justify-between border bg-card p-6 ${
+      className={`flex h-full flex-col justify-between border bg-card p-6 ${
         featured ? 'border-brand/40 drop-shadow-[0px_8px_15px_rgba(212,175,55,0.1)]' : 'border-line/30'
       }`}
     >
-      <span
-        aria-hidden
-        className={`mb-4 grid size-10 place-items-center rounded-full border ${
-          featured ? 'border-brand bg-brand/20' : 'border-brand/40 bg-brand/10'
+      <div className="mb-4">
+        <Stars value={review.rating} className="size-4" />
+      </div>
+      <blockquote
+        className={`pb-6 text-sm leading-[22.75px] tracking-[0.01em] wrap-break-word italic ${
+          featured ? 'text-text' : 'text-text-soft'
         }`}
       >
-        <Icon src={testimonial.icon} className={testimonial.iconSize} />
-      </span>
-      <blockquote
-        className={`pb-6 text-sm leading-[22.75px] tracking-[0.01em] italic ${featured ? 'text-text' : 'text-text-soft'}`}
-      >
-        <p>"{testimonial.quote}"</p>
+        <p>"{review.comment}"</p>
       </blockquote>
       <figcaption
         className={`flex items-center gap-2 border-t pt-4 ${featured ? 'border-brand/30' : 'border-line/20'}`}
@@ -35,20 +44,20 @@ function TestimonialCard({ testimonial, index }) {
             featured ? 'border-brand bg-brand/20' : 'border-brand/30 bg-surface-2'
           }`}
         >
-          {testimonial.initials}
+          {initials(review.author)}
         </span>
         <span className="flex min-w-0 flex-col gap-[7.5px]">
           <cite
             className={`font-display text-xl leading-7 font-medium not-italic ${featured ? 'text-brand' : 'text-text'}`}
           >
-            {testimonial.name}
+            {review.author}
           </cite>
           <span
             className={`text-[9px] leading-3 font-bold tracking-[0.1em] uppercase ${
               featured ? 'text-brand-soft' : 'text-brand'
             }`}
           >
-            {testimonial.role}
+            {service.name} · con {barber.name}
           </span>
         </span>
       </figcaption>
@@ -56,9 +65,71 @@ function TestimonialCard({ testimonial, index }) {
   )
 }
 
+function Testimonials() {
+  const { data, isPending, error } = useQuery({
+    queryKey: queryKeys.publicReviews,
+    queryFn: reviewsApi.published,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  if (isPending) {
+    return (
+      <div className="grid w-full gap-6 md:grid-cols-3" aria-busy="true">
+        {[0, 1, 2].map((key) => (
+          <span key={key} aria-hidden className="block h-64 animate-pulse border border-line/20 bg-card motion-reduce:animate-none" />
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <p role="alert" className="w-full border border-line/30 bg-card p-6 text-sm text-danger">
+        No pudimos cargar las reseñas. {error.message}
+      </p>
+    )
+  }
+
+  if (!data.reviews.length) {
+    return (
+      <div className="flex w-full max-w-[672px] flex-col items-center gap-3 border border-line/30 bg-card p-8 text-center">
+        <p className="text-sm text-text-soft">
+          Aún no hay reseñas publicadas. Después de tu cita podrás calificar el servicio desde "Mis citas".
+        </p>
+        <Link
+          to="/reservar"
+          className="pressable border border-brand/50 px-6 py-2.5 text-[9px] leading-3 font-bold tracking-[0.1em] text-brand uppercase hover:border-brand hover:bg-brand/10"
+        >
+          Reservar mi cita
+        </Link>
+      </div>
+    )
+  }
+
+  const { summary, reviews } = data
+  // Como en el diseño, la tarjeta central de cada fila va destacada.
+  return (
+    <>
+      <p className="flex items-center gap-2 text-sm text-text-soft">
+        <Stars value={summary.average} className="size-4" />
+        <span>
+          <strong className="font-semibold text-brand">{averageFormatter.format(summary.average)}</strong> de 5 ·{' '}
+          {summary.count} {summary.count === 1 ? 'reseña' : 'reseñas'}
+        </span>
+      </p>
+      <div className="grid w-full items-stretch gap-6 md:grid-cols-3">
+        {reviews.map((review, index) => (
+          <TestimonialCard key={review.id} review={review} index={index} featured={reviews.length >= 3 && index % 3 === 1} />
+        ))}
+      </div>
+    </>
+  )
+}
+
 export default function TestimonialsSection() {
   return (
     <section
+      id="resenas"
       aria-labelledby="testimonios-title"
       className="border-t border-line/30 bg-surface pt-20 pb-20 lg:pt-28 lg:pb-28"
     >
@@ -67,21 +138,17 @@ export default function TestimonialsSection() {
           <SectionHeading
             id="testimonios-title"
             align="center"
-            eyebrow="Testimonios exclusivos"
+            eyebrow="Reseñas de clientes"
             eyebrowTracking="tracking-[0.3em]"
             title={
               <>
                 Lo que dicen <Accent>nuestros reyes</Accent>
               </>
             }
-            description="La discreción y la excelencia constante son los pilares por los cuales las personalidades más influyentes depositan su imagen en Midas."
+            description="Opiniones reales de clientes que ya vivieron la experiencia Midas, calificadas después de cada servicio."
           />
         </Reveal>
-        <div className="grid w-full items-start gap-6 md:grid-cols-3">
-          {testimonials.map((testimonial, index) => (
-            <TestimonialCard key={testimonial.name} testimonial={testimonial} index={index} />
-          ))}
-        </div>
+        <Testimonials />
       </div>
     </section>
   )

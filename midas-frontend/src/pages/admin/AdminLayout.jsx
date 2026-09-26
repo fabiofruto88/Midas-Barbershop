@@ -10,7 +10,7 @@ export default function AdminLayout() {
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-3xl font-bold">Administración</h1>
-        <nav className="flex gap-1 rounded-card border border-border bg-surface p-1" aria-label="Secciones">
+        <nav className="flex flex-wrap gap-1 rounded-card border border-border bg-surface p-1" aria-label="Secciones">
           <NavLink to="/admin/servicios" className={tabClass}>
             Servicios
           </NavLink>
@@ -19,6 +19,9 @@ export default function AdminLayout() {
           </NavLink>
           <NavLink to="/admin/galeria" className={tabClass}>
             Galería
+          </NavLink>
+          <NavLink to="/admin/resenas" className={tabClass}>
+            Reseñas
           </NavLink>
         </nav>
       </header>

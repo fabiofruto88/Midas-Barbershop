@@ -21,4 +21,6 @@ export const queryKeys = {
   myAvailability: ['availability', 'me'],
   publishedResults: ['results', 'public'],
   allResults: ['results', 'all'],
+  publicReviews: ['reviews', 'public'],
+  allReviews: ['reviews', 'all'],
 }

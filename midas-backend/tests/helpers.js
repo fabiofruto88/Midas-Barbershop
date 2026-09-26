@@ -49,6 +49,7 @@ const cleanup = async () => {
     OR: [{ barberId: { in: ids } }, { clientId: { in: ids } }, { serviceId: { in: serviceIds } }],
   };
   await prisma.serviceResult.deleteMany({ where: { appointment: appointmentWhere } });
+  await prisma.review.deleteMany({ where: { appointment: appointmentWhere } });
   await prisma.appointment.deleteMany({ where: appointmentWhere });
   await prisma.barberAvailability.deleteMany({ where: { barberId: { in: ids } } });
   await prisma.user.deleteMany({ where: { id: { in: ids } } });

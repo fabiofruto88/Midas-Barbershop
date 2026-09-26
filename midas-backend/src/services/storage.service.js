@@ -2,7 +2,7 @@ const crypto = require('node:crypto');
 const { v2: cloudinary } = require('cloudinary');
 const AppError = require('../utils/AppError');
 
-const FOLDER = 'midas/results';
+const FOLDERS = { results: 'midas/results', barbers: 'midas/barbers' };
 
 const isConfigured = () =>
   Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
@@ -24,11 +24,11 @@ const ensureConfigured = () => {
 };
 
 // Sube un buffer ya validado. El public_id es aleatorio para que la URL no sea adivinable.
-const uploadImage = (buffer) => {
+const uploadImage = (buffer, { folder = 'results' } = {}) => {
   ensureConfigured();
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: FOLDER, public_id: crypto.randomUUID(), resource_type: 'image', overwrite: false },
+      { folder: FOLDERS[folder], public_id: crypto.randomUUID(), resource_type: 'image', overwrite: false },
       (error, result) => {
         if (error) return reject(new AppError('No se pudo subir la imagen. Intenta de nuevo.', 502));
         resolve({ url: result.secure_url, publicId: result.public_id });

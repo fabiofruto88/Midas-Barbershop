@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const controller = require('../controllers/appointment.controller');
+const reviewController = require('../controllers/review.controller');
 const validate = require('../middlewares/validate');
 const { authenticate, optionalAuth, authorize } = require('../middlewares/auth');
 const { uploadImage } = require('../middlewares/uploadImage');
@@ -11,6 +12,7 @@ const {
   resultBody,
   appointmentIdParam,
 } = require('../schemas/appointment.schema');
+const { reviewBody } = require('../schemas/review.schema');
 
 const router = Router();
 
@@ -39,6 +41,15 @@ router.post(
   uploadImage('image'),
   validate({ body: resultBody }),
   controller.uploadResult
+);
+
+// Reseña del cliente sobre su cita completada (crear o editar).
+router.put(
+  '/:id/review',
+  authenticate,
+  authorize('CLIENT'),
+  validate({ params: appointmentIdParam, body: reviewBody }),
+  reviewController.upsert
 );
 
 module.exports = router;

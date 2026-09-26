@@ -4,12 +4,9 @@ import { useMutation } from '@tanstack/react-query'
 import { appointmentsApi } from '../../services/midas'
 import Alert from '../ui/Alert'
 import Button from '../ui/Button'
-
-const MAX_BYTES = 5 * 1024 * 1024
-const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp']
+import { ACCEPTED_IMAGES, imageFileError } from '../../lib/imageFile'
 
 // Selección, vista previa y subida de la foto del resultado.
-// La validación aquí es solo de UX: el backend verifica el tipo real por magic numbers.
 export default function ResultUploader({ appointmentId, onUploaded, onCancel }) {
   const inputId = useId()
   const [file, setFile] = useState(null)
@@ -31,8 +28,8 @@ export default function ResultUploader({ appointmentId, onUploaded, onCancel }) 
     const selected = event.target.files?.[0]
     setError(null)
     if (!selected) return setFile(null)
-    if (!ACCEPTED.includes(selected.type)) return setError('Solo se permiten imágenes JPEG, PNG o WebP.')
-    if (selected.size > MAX_BYTES) return setError('La imagen no puede superar los 5MB.')
+    const invalid = imageFileError(selected)
+    if (invalid) return setError(invalid)
     setFile(selected)
   }
 
@@ -44,7 +41,7 @@ export default function ResultUploader({ appointmentId, onUploaded, onCancel }) 
       <input
         id={inputId}
         type="file"
-        accept={ACCEPTED.join(',')}
+        accept={ACCEPTED_IMAGES.join(',')}
         onChange={choose}
         className="block w-full text-sm text-muted file:mr-3 file:rounded-control file:border-0 file:bg-surface file:px-3 file:py-2 file:text-sm file:text-text"
       />

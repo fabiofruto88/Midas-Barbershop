@@ -175,6 +175,7 @@ const listMyAppointments = async (user) => {
       service: { select: { name: true } },
       barber: { select: { name: true } },
       result: { select: { imageUrl: true, ...(isBarber && { notes: true, isPublished: true }) } },
+      ...(!isBarber && { review: { select: { rating: true, comment: true } } }),
       ...(isBarber && {
         client: { select: { name: true, phone: true } },
         guestName: true,

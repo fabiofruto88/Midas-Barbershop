@@ -161,7 +161,7 @@ describe('Usuarios y Barberos (Admin)', () => {
     const res = await request(app).get('/api/v1/barbers');
     assert.equal(res.status, 200);
     const found = res.body.find((item) => item.id === barber.user.id);
-    assert.deepEqual(Object.keys(found).sort(), ['id', 'name']);
+    assert.deepEqual(Object.keys(found).sort(), ['avatarUrl', 'id', 'name']);
   });
 
   test('admin filtra usuarios por rol', async () => {

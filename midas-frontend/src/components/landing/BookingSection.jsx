@@ -8,16 +8,13 @@ import { appointmentsApi } from '../../services/midas'
 import { queryKeys } from '../../lib/queryClient'
 import { formatPrice, nextDays, parseDate, toDateString } from '../../lib/format'
 import { barberProfiles } from '../../content/landing'
-import barber1 from '../../assets/landing/barber-1.jpg'
-import barber2 from '../../assets/landing/barber-2.jpg'
-import barber3 from '../../assets/landing/barber-3.jpg'
+import { barberPortrait } from '../../lib/barberPortrait'
 import iconRadioChecked from '../../assets/landing/icon-radio-checked.svg'
 import iconRadio from '../../assets/landing/icon-radio.svg'
 import SectionHeading, { Accent } from './SectionHeading'
 import Icon from './Icon'
 import Reveal from './Reveal'
 
-const portraits = [barber1, barber2, barber3]
 const DAYS_SHOWN = 5
 const ease = [0.23, 1, 0.32, 1]
 
@@ -67,7 +64,7 @@ function BarberCard({ barber, index, selected, onSelect }) {
           selected ? 'border-brand/40' : 'border-line/40'
         }`}
       >
-        <img src={portraits[index % portraits.length]} alt="" className="size-full object-cover grayscale" />
+        <img src={barberPortrait(barber, index)} alt="" className="size-full object-cover grayscale" />
         <span
           className={`absolute inset-0 transition-colors duration-200 ${selected ? 'bg-brand/10' : 'bg-black/30'}`}
         />

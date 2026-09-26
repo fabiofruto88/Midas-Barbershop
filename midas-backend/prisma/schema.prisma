@@ -30,6 +30,7 @@ model User {
   email             String?  @unique // Opcional para invitados que luego se registran
   passwordHash      String?
   phone             String?
+  avatarUrl         String?  // Foto del barbero (Cloudinary); sin ella el front usa la de por defecto
   pushSubscription  Json?    // Almacena el token de Web Push
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -38,6 +39,7 @@ model User {
   barberAvailability BarberAvailability[]
   appointmentsAsBarber Appointment[] @relation("BarberAppointments")
   appointmentsAsClient Appointment[] @relation("ClientAppointments")
+  reviews            Review[]
 }
 
 model Service {
@@ -85,6 +87,7 @@ model Appointment {
   client          User?             @relation("ClientAppointments", fields: [clientId], references: [id])
   service         Service           @relation(fields: [serviceId], references: [id])
   result          ServiceResult?
+  review          Review?
 
   // Índice compuesto para evitar concurrencia (Race conditions)
   @@unique([barberId, date, timeSlot])
@@ -101,4 +104,21 @@ model ServiceResult {
   appointment     Appointment @relation(fields: [appointmentId], references: [id])
 
   @@index([isPublished, createdAt])
+}
+
+// Reseña del cliente sobre una cita completada (una por cita). Sale en "Lo que dicen nuestros reyes".
+model Review {
+  id              String      @id @default(uuid())
+  appointmentId   String      @unique
+  clientId        String
+  rating          Int         // 1 a 5 estrellas
+  comment         String
+  isVisible       Boolean     @default(true) // El admin puede ocultarla de la web
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  appointment     Appointment @relation(fields: [appointmentId], references: [id])
+  client          User        @relation(fields: [clientId], references: [id])
+
+  @@index([isVisible, createdAt])
 }

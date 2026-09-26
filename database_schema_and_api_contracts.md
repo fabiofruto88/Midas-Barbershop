@@ -238,6 +238,57 @@ Publica u oculta una foto en la galería.
 
 ---
 
+### 2.3.1 Reseñas (`/reviews`)
+
+Modelo `Review`: una reseña por cita (`appointmentId` único), `rating` 1-5, `comment` (10-500 caracteres) e `isVisible` (por defecto `true`; el admin puede ocultarla).
+
+#### `PUT /appointments/:id/review` (Cliente)
+Crea o edita la reseña de una cita propia en estado `COMPLETED`. Editarla no cambia su visibilidad.
+*   **Body:** `{ "rating": 5, "comment": "Excelente corte y atención." }`
+*   **Errores:** 400 si la cita no está completada o los datos son inválidos · 403 si la cita es de otro cliente · 404 si no existe.
+*   `GET /appointments/me` del cliente incluye `review: { rating, comment }` (o `null`).
+
+#### `GET /reviews/public`
+Testimonios de la landing: solo reseñas visibles, de la más reciente a la más antigua. El autor se muestra como "Nombre I." (sin email ni apellido completo).
+*   **Query:** `limit` (1-12, por defecto 6).
+*   **Response (200 OK):**
+    ```json
+    {
+      "summary": { "average": 4.8, "count": 12 },
+      "reviews": [
+        {
+          "id": "UUID",
+          "rating": 5,
+          "comment": "Excelente corte y atención.",
+          "createdAt": "2026-09-26T15:00:00.000Z",
+          "author": "Carlos P.",
+          "appointment": { "service": { "name": "Corte" }, "barber": { "name": "Juan" } }
+        }
+      ]
+    }
+    ```
+
+#### `GET /reviews` (Admin)
+Todas las reseñas con `isVisible` y el cliente (`name`, `email`). **Query:** `isVisible` (`true` | `false`, opcional).
+
+#### `PATCH /reviews/:id` (Admin)
+*   **Body:** `{ "isVisible": false }` · **Response:** `{ "id": "UUID", "isVisible": false }` · 404 si no existe.
+
+---
+
+### 2.3.2 Foto del barbero (`/users/:id/avatar`)
+
+`User.avatarUrl` (opcional). Si es `null`, el frontend usa el retrato por defecto. `GET /barbers` devuelve `{ id, name, avatarUrl }`.
+
+#### `POST /users/:id/avatar` (Admin)
+Sube o reemplaza la foto de un **barbero** (`multipart/form-data`, campo `image`, JPEG/PNG/WebP hasta 5MB). La foto anterior se borra de Cloudinary.
+*   **Response (200 OK):** el usuario con `avatarUrl`. 400 si el usuario no es barbero · 415 si no es una imagen real.
+
+#### `DELETE /users/:id/avatar` (Admin)
+Quita la foto (vuelve a la de por defecto) y la borra de Cloudinary.
+
+---
+
 ### 2.4 Web Push Notifications (`/notifications`)
 
 #### `POST /notifications/subscribe`
