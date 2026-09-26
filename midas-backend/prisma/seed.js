@@ -25,7 +25,22 @@ const main = async () => {
 
   console.log(`Admin listo: ${admin.email} (${admin.id})`);
 
+  await seedShopCategories();
+
   if (process.env.SEED_DEMO === 'true') await seedDemo();
+};
+
+// Categorías iniciales de la tienda. Solo si no hay ninguna: el seed corre en cada deploy
+// y no debe recrear las que el admin haya borrado o renombrado.
+const seedShopCategories = async () => {
+  if ((await prisma.productCategory.count()) > 0) return;
+  await prisma.productCategory.createMany({
+    data: [
+      { name: 'Barbería', sortOrder: 0 },
+      { name: 'Estilo', sortOrder: 1 },
+    ],
+  });
+  console.log('Tienda: categorías iniciales creadas (Barbería, Estilo).');
 };
 
 // Datos de demostración para desarrollo (idempotente). Contraseña de los barberos: Barbero123

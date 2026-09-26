@@ -1,6 +1,7 @@
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import SiteHeader from '../components/landing/SiteHeader'
 import SiteFooter from '../components/landing/SiteFooter'
+import CartDrawer from '../components/shop/CartDrawer'
 
 export default function RootLayout() {
   // La landing ocupa todo el ancho y su hero pasa por debajo del header fijo.
@@ -27,6 +28,7 @@ export default function RootLayout() {
       </main>
 
       <SiteFooter />
+      <CartDrawer />
       <ScrollRestoration />
     </div>
   )

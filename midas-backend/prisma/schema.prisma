@@ -138,3 +138,31 @@ model Review {
 
   @@index([isVisible, createdAt])
 }
+
+// Tienda: catálogo de productos. No se vende en la web; el carrito se envía por WhatsApp.
+model ProductCategory {
+  id              String      @id @default(uuid())
+  name            String      @unique
+  sortOrder       Int         @default(0) // Orden de las pestañas en la tienda
+  createdAt       DateTime    @default(now())
+
+  products        Product[]
+}
+
+model Product {
+  id              String          @id @default(uuid())
+  categoryId      String
+  name            String
+  description     String?
+  price           Decimal         @db.Decimal(10, 2)
+  imageUrl        String?         // Foto en Cloudinary; sin ella el front muestra un marcador
+  isAvailable     Boolean         @default(true)  // false = "Agotado": se ve pero no se puede añadir
+  isVisible       Boolean         @default(true)  // false = oculto de la tienda pública
+  isFeatured      Boolean         @default(false) // Destacado: aparece primero
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  category        ProductCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([isVisible, categoryId])
+}

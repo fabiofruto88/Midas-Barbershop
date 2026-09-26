@@ -1,8 +1,9 @@
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useId, useState } from 'react'
 import { toast } from 'sonner'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '../../services/midas'
 import { useAuth } from '../../hooks/useAuth'
+import { useFilePreview } from '../../hooks/useFilePreview'
 import { queryKeys } from '../../lib/queryClient'
 import { rules, serverFieldErrors, validateForm } from '../../lib/validation'
 import { ACCEPTED_IMAGES, imageFileError } from '../../lib/imageFile'
@@ -81,12 +82,6 @@ function useInvalidateTeam() {
 }
 
 // Vista previa local de un archivo; la URL temporal se libera al cambiar de archivo o desmontar.
-function useFilePreview(file) {
-  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file])
-  useEffect(() => () => preview && URL.revokeObjectURL(preview), [preview])
-  return preview
-}
-
 // Foto del barbero en su fila: cambiarla o volver a la foto por defecto.
 function BarberPhoto({ user, index }) {
   const invalidate = useInvalidateTeam()

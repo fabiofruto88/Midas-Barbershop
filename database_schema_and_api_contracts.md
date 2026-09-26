@@ -121,6 +121,34 @@ model ServiceResult {
 
   @@index([isPublished, createdAt])
 }
+
+// Tienda: catálogo de productos. No se vende en la web; el carrito se envía por WhatsApp.
+model ProductCategory {
+  id              String      @id @default(uuid())
+  name            String      @unique
+  sortOrder       Int         @default(0) // Orden de las pestañas en la tienda
+  createdAt       DateTime    @default(now())
+
+  products        Product[]
+}
+
+model Product {
+  id              String          @id @default(uuid())
+  categoryId      String
+  name            String
+  description     String?
+  price           Decimal         @db.Decimal(10, 2)
+  imageUrl        String?         // Foto en Cloudinary (carpeta midas/products)
+  isAvailable     Boolean         @default(true)  // false = "Agotado": se ve pero no se puede añadir
+  isVisible       Boolean         @default(true)  // false = oculto de la tienda pública
+  isFeatured      Boolean         @default(false) // Destacado: aparece primero
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  category        ProductCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([isVisible, categoryId])
+}
 ```
 
 ---
@@ -344,6 +372,57 @@ Sube o reemplaza la foto de un **barbero** (`multipart/form-data`, campo `image`
 
 #### `DELETE /users/:id/avatar` (Admin)
 Quita la foto (vuelve a la de por defecto) y la borra de Cloudinary.
+
+---
+
+### 2.3.3 Tienda (`/shop`)
+
+Catálogo público de productos (no requiere sesión). **No hay pedidos en el backend:** el carrito vive en el navegador (`localStorage`) y el cliente envía el pedido por WhatsApp (`wa.me/<número>?text=…`); el pago y la entrega se cierran con el asesor.
+
+#### `GET /shop/categories`
+Categorías ordenadas por `sortOrder` y nombre, con el conteo de productos.
+*   **Response (200 OK):** `[{ "id": "UUID", "name": "Barbería", "sortOrder": 0, "createdAt": "…", "_count": { "products": 3 } }]`
+
+#### `POST /shop/categories` · `PATCH /shop/categories/:id` (Admin)
+*   **Body:** `{ "name": "Cuidado de barba", "sortOrder": 2 }` (`name` 2–50 caracteres, único sin distinguir mayúsculas; `sortOrder` entero 0–999). En `PATCH` todo es opcional pero se exige al menos un campo.
+*   **Error (409):** ya existe una categoría con ese nombre.
+
+#### `DELETE /shop/categories/:id` (Admin)
+*   **Response (200 OK):** `{ "message": "Categoría eliminada." }`
+*   **Error (409):** la categoría tiene productos (hay que moverlos o borrarlos antes).
+
+#### `GET /shop/products`
+Productos visibles, destacados primero y luego por nombre. Incluye los agotados (`isAvailable: false`) para mostrarlos marcados.
+*   **Query:** `categoryId` (UUID, opcional) · `includeHidden=true` (solo tiene efecto para el Admin).
+*   **Response (200 OK):**
+    ```json
+    [
+      {
+        "id": "UUID",
+        "name": "Cera mate",
+        "description": "Fijación fuerte y acabado natural.",
+        "price": "35000",
+        "imageUrl": "https://res.cloudinary.com/…/midas/products/<id>.jpg",
+        "isAvailable": true,
+        "isVisible": true,
+        "isFeatured": true,
+        "category": { "id": "UUID", "name": "Barbería" }
+      }
+    ]
+    ```
+
+#### `GET /shop/products/:id`
+Un producto (404 si está oculto, salvo para el Admin).
+
+#### `POST /shop/products` · `PATCH /shop/products/:id` (Admin)
+*   **Body:** `{ "categoryId": "UUID", "name": "Cera mate", "description": "…", "price": 35000, "isAvailable": true, "isVisible": true, "isFeatured": false }` (`price` > 0 con máximo 2 decimales; `description` ≤ 500, `null` en `PATCH` para borrarla). Campos desconocidos → 400.
+*   **Error (400):** `{ "error": "La categoría no existe." }`
+
+#### `DELETE /shop/products/:id` (Admin)
+Borrado real (no hay pedidos que lo referencien); su foto se borra de Cloudinary. Para retirarlo temporalmente se usa `isVisible: false`.
+
+#### `POST /shop/products/:id/image` · `DELETE /shop/products/:id/image` (Admin)
+Sube/reemplaza (`multipart/form-data`, campo `image`, JPEG/PNG/WebP hasta 5MB; 415 si no es una imagen real) o quita la foto. La anterior se borra de Cloudinary.
 
 ---
 

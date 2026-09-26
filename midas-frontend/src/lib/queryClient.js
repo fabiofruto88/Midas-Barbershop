@@ -23,5 +23,8 @@ export const queryKeys = {
   allResults: ['results', 'all'],
   publicReviews: ['reviews', 'public'],
   allReviews: ['reviews', 'all'],
+  shopCategories: ['shop', 'categories'],
+  shopProducts: ['shop', 'products'],
+  adminProducts: ['shop', 'products', 'admin'],
   finance: (period, date, barberId) => ['finance', period, date, barberId ?? 'me'],
 }

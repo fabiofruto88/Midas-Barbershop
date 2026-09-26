@@ -66,10 +66,14 @@ export const barberProfiles = [
 const location = { lat: 10.924561826264892, lng: -74.7663884310752 }
 const coords = `${location.lat},${location.lng}`
 
+// Único lugar del número de WhatsApp: lo usan el contacto y los pedidos de la tienda.
+const whatsappNumber = '573006945339'
+
 export const contact = {
   phone: '+57 300 6945339',
   phoneHref: 'tel:+573006945339',
-  whatsappHref: 'https://wa.me/573006945339',
+  whatsappNumber,
+  whatsappHref: `https://wa.me/${whatsappNumber}`,
   address: 'Barranquilla, Atlántico',
   city: 'Colombia',
   location,

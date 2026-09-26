@@ -23,6 +23,9 @@ export default function AdminLayout() {
           <NavLink to="/admin/resenas" className={tabClass}>
             Reseñas
           </NavLink>
+          <NavLink to="/admin/tienda" className={tabClass}>
+            Tienda
+          </NavLink>
         </nav>
       </header>
       <Outlet />

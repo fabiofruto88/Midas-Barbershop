@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { appointmentsApi, catalogApi } from '../services/midas'
+import { appointmentsApi, catalogApi, shopApi } from '../services/midas'
 import { queryKeys } from '../lib/queryClient'
 
 export const useServices = () =>
@@ -23,3 +23,10 @@ export const useAvailability = (barberId, date) =>
     enabled: Boolean(barberId && date),
     ...availabilityQueryOptions,
   })
+
+// Tienda: el catálogo de productos cambia poco, pero los precios deben verse al día en el carrito.
+export const useShopProducts = ({ enabled = true } = {}) =>
+  useQuery({ queryKey: queryKeys.shopProducts, queryFn: shopApi.products, staleTime: 60 * 1000, enabled })
+
+export const useShopCategories = () =>
+  useQuery({ queryKey: queryKeys.shopCategories, queryFn: shopApi.categories, staleTime: 5 * 60 * 1000 })

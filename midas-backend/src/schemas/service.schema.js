@@ -1,12 +1,4 @@
-const { z } = require('../utils/validators');
-
-// Precio positivo con máximo 2 decimales y dentro de Decimal(10, 2).
-const price = z.coerce
-  .number({ error: 'El precio debe ser un número.' })
-  .positive('El precio debe ser mayor que 0.')
-  .max(99999999.99, 'El precio es demasiado alto.')
-  // toFixed absorbe el error de coma flotante (19.99 * 100 = 1998.9999999999998).
-  .refine((value) => Number.isInteger(Number((value * 100).toFixed(6))), 'El precio admite como máximo 2 decimales.');
+const { z, price } = require('../utils/validators');
 
 const serviceName = z
   .string({ error: 'El nombre es obligatorio.' })

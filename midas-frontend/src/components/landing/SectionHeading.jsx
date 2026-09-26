@@ -19,6 +19,7 @@ export default function SectionHeading({
   description,
   descriptionClassName = 'text-sm leading-[22px] tracking-[0.01em] text-muted',
   align = 'left',
+  as: Title = 'h2',
   className = '',
 }) {
   const centered = align === 'center'
@@ -28,9 +29,9 @@ export default function SectionHeading({
         {eyebrowRule && <span aria-hidden className="h-px w-8 bg-brand" />}
         <Eyebrow tracking={eyebrowTracking}>{eyebrow}</Eyebrow>
       </div>
-      <h2 id={id} className={`pt-1 font-display font-semibold text-text uppercase ${titleClassName}`}>
+      <Title id={id} className={`pt-1 font-display font-semibold text-text uppercase ${titleClassName}`}>
         {title}
-      </h2>
+      </Title>
       {description && <p className={descriptionClassName}>{description}</p>}
     </div>
   )

@@ -45,6 +45,14 @@ const dateOnly = z
     return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
   }, 'La fecha no existe en el calendario.');
 
+// Precio en COP: positivo, con máximo 2 decimales y dentro de Decimal(10, 2).
+const price = z.coerce
+  .number({ error: 'El precio debe ser un número.' })
+  .positive('El precio debe ser mayor que 0.')
+  .max(99999999.99, 'El precio es demasiado alto.')
+  // toFixed absorbe el error de coma flotante (19.99 * 100 = 1998.9999999999998).
+  .refine((value) => Number.isInteger(Number((value * 100).toFixed(6))), 'El precio admite como máximo 2 decimales.');
+
 const idParam = z.object({ id: uuid() });
 
-module.exports = { z, uuid, email, password, name, phone, hourTime, dateOnly, idParam };
+module.exports = { z, uuid, email, password, name, phone, price, hourTime, dateOnly, idParam };

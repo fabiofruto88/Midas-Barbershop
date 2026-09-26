@@ -99,6 +99,43 @@ Objetivo: que cada barbero vea lo que ha generado por día, semana y mes. El pre
 - [x] Vista de admin: la misma página `/agenda/finanzas` con selector de barbero (o toda la barbería).
 - [x] Verificado en navegador real (Edge): completar una cita con precio ajustado → aparece en el resumen con el importe correcto; vistas día/semana/mes y móvil sin desbordes.
 
+## Fase 9: Tienda del club
+Objetivo: una página pública **Tienda** con productos de barbería y de estilo que el admin gestiona desde su panel. **No se compra en la web:** el cliente arma un carrito (sin iniciar sesión) y al continuar se abre el WhatsApp de la barbería con la lista de productos y el total; la venta, el pago y la entrega los cierra el asesor por fuera.
+
+Decisiones: el admin crea sus propias categorías · disponibilidad solo "Disponible / Agotado" (sin stock) · no se guardan pedidos en la BD · una foto por producto.
+
+### Base de datos (Prisma)
+- [x] Modelos `ProductCategory` (`name` único, `sortOrder`) y `Product` (`price Decimal(10,2)`, `imageUrl?`, `isAvailable`, `isVisible`, `isFeatured`, índice `[isVisible, categoryId]`). Migración `20260926174025_shop`.
+- [x] Seed: categorías iniciales "Barbería" y "Estilo" **solo si la tabla está vacía** (el seed corre en cada deploy y no debe recrear las que el admin borre o renombre).
+
+### Backend
+- [x] `/shop` (`shop.routes.js`, `shop.controller.js`, `shop.service.js`, `shop.schema.js`): catálogo público (`GET /shop/categories`, `GET /shop/products`) y gestión solo Admin (CRUD de categorías y productos, `POST/DELETE /shop/products/:id/image`).
+- [x] Validador de precio compartido movido a `utils/validators.js` (lo usan servicios y productos).
+- [x] Fotos en Cloudinary (`midas/products`) con la misma validación por magic numbers; al reemplazar o borrar el producto se borra la foto anterior.
+- [x] Nombre de categoría único sin distinguir mayúsculas (409); no se borra una categoría con productos (409); productos ocultos invisibles para el público (`includeHidden` solo para el admin).
+- [x] Pruebas `tests/shop.test.js` (9 pruebas; suite completa 112/112 en verde).
+
+### Frontend
+- [x] Página pública `/tienda` (`ShopPage.jsx`): cabecera con los 3 pasos (Elige → Envía → Recibe), filtros por categoría, buscador sin tildes, rejilla 2/3 columnas de `ProductCard` con badges "Destacado" / "Agotado" y selector de cantidad; barra fija con el resumen del pedido.
+- [x] Carrito (`store/cartStore.js`, zustand + `localStorage`) y panel lateral `CartDrawer` global con nombre y nota opcionales y botón "Continuar pedido por WhatsApp" (`lib/whatsapp.js`).
+- [x] Enlace "Tienda" en el header (escritorio y móvil) y el footer; icono de carrito con contador en el header.
+- [x] Panel admin `/admin/tienda` (`ShopAdminPage.jsx`): productos con miniatura, filtro por categoría, editar, agotado/disponible, ocultar/mostrar, destacar y eliminar con confirmación; formulario con foto y previsualización; gestión de categorías (crear, renombrar, reordenar ▲▼, borrar).
+- [x] Número de WhatsApp centralizado en `content/landing.js` (`contact.whatsappNumber`), del que salen el contacto y los pedidos.
+- [x] Verificado en navegador real (Edge, escritorio y móvil 390px): admin crea productos con foto, el invitado filtra, añade, recarga (el carrito persiste) y el enlace `wa.me` lleva el mensaje correcto; al ocultar un producto o cambiar su precio el carrito se actualiza solo; sin desbordes en móvil.
+
+### Consideraciones resueltas
+- **Precios desactualizados:** el carrito guarda una copia, pero se reconcilia con el catálogo al cargar: actualiza nombre, precio y foto, quita lo oculto o borrado (con aviso) y los agotados quedan marcados y fuera del total y del mensaje. El mensaje termina con "Precios sujetos a confirmación del asesor".
+- **Largo de la URL de WhatsApp:** máximo 20 unidades por producto y 30 productos distintos por pedido; nombre ≤ 60 y nota ≤ 200 caracteres.
+- **Bloqueadores de ventanas emergentes:** se usa un enlace real (`<a target="_blank">`), no `window.open`; en el móvil abre la app de WhatsApp.
+- **El carrito no se vacía solo al enviar** (puede que el cliente no llegue a mandar el mensaje): aviso con la acción "Vaciar carrito".
+- **Privacidad:** nombre y nota solo viajan en el mensaje de WhatsApp; no se guardan en ningún servidor.
+- **Retirar sin perder:** `isVisible = false` oculta un producto sin borrarlo; el borrado real también elimina su foto.
+
+### Pendiente / ideas futuras
+- [ ] Cargar el catálogo real (productos, fotos y precios) desde el panel.
+- [ ] (Opcional) Bloque "Destacados de la tienda" en la landing reutilizando `isFeatured`.
+- [ ] (Opcional) Registrar pedidos enviados si más adelante el club quiere estadísticas de ventas.
+
 ## Extras (fuera del plan original)
 - [x] Panel de Administración (`/admin`): gestión de servicios y equipo (crear barberos, cambiar roles).
 - [x] Pantalla "Historial" del barbero (`/agenda/historial`): servicios completados con foto, notas y filtros; permite subir o cambiar la foto.

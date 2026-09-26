@@ -2,7 +2,7 @@ const crypto = require('node:crypto');
 const { v2: cloudinary } = require('cloudinary');
 const AppError = require('../utils/AppError');
 
-const FOLDERS = { results: 'midas/results', barbers: 'midas/barbers' };
+const FOLDERS = { results: 'midas/results', barbers: 'midas/barbers', products: 'midas/products' };
 
 const isConfigured = () =>
   Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);

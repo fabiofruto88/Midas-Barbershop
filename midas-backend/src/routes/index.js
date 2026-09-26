@@ -8,6 +8,7 @@ const notificationRoutes = require('./notification.routes');
 const resultRoutes = require('./result.routes');
 const reviewRoutes = require('./review.routes');
 const financeRoutes = require('./finance.routes');
+const shopRoutes = require('./shop.routes');
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/results', resultRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/finance', financeRoutes);
+router.use('/shop', shopRoutes);
 
 module.exports = router;

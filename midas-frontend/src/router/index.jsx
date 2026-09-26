@@ -18,6 +18,8 @@ import ServicesAdminPage from '../pages/admin/ServicesAdminPage'
 import TeamAdminPage from '../pages/admin/TeamAdminPage'
 import GalleryAdminPage from '../pages/admin/GalleryAdminPage'
 import ReviewsAdminPage from '../pages/admin/ReviewsAdminPage'
+import ShopAdminPage from '../pages/admin/ShopAdminPage'
+import ShopPage from '../pages/ShopPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
 const router = createBrowserRouter([
@@ -33,6 +35,7 @@ const router = createBrowserRouter([
           { path: 'reservar/confirmada', element: <BookingConfirmedPage /> },
         ],
       },
+      { path: 'tienda', element: <ShopPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'registro', element: <RegisterPage /> },
       { path: 'cancelar/:id', element: <GuestCancelPage /> },
@@ -66,6 +69,7 @@ const router = createBrowserRouter([
               { path: 'equipo', element: <TeamAdminPage /> },
               { path: 'galeria', element: <GalleryAdminPage /> },
               { path: 'resenas', element: <ReviewsAdminPage /> },
+              { path: 'tienda', element: <ShopAdminPage /> },
             ],
           },
         ],

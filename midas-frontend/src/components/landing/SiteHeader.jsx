@@ -8,6 +8,8 @@ import emblem from "../../assets/landing/midas-emblem.jpg";
 import iconUser from "../../assets/landing/icon-user.svg";
 import Button from "../ui/Button";
 import Icon from "./Icon";
+import CartButton from "../shop/CartButton";
+import { cartCount, useCartStore } from "../../store/cartStore";
 
 const ease = [0.23, 1, 0.32, 1];
 
@@ -174,7 +176,9 @@ export default function SiteHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const isShop = location.pathname === "/tienda";
   const active = useActiveSection(isHome);
+  const hasCart = useCartStore((state) => cartCount(state.items) > 0);
   const [menuOpen, setMenuOpen] = usePanel();
   const panelRef = useRef(null);
   useDismiss(menuOpen, setMenuOpen, panelRef);
@@ -218,6 +222,17 @@ export default function SiteHeader() {
               </a>
             );
           })}
+          <Link
+            to="/tienda"
+            aria-current={isShop ? "page" : undefined}
+            className={
+              isShop
+                ? "border-b border-brand pt-1 pb-[5px] text-base leading-6 font-bold text-brand uppercase"
+                : "hit-area py-1 text-[11px] leading-[14px] font-semibold tracking-[0.18em] text-text-soft uppercase transition-colors duration-150 hover:text-brand"
+            }
+          >
+            Tienda
+          </Link>
         </nav>
 
         <div className="flex items-center gap-4">
@@ -229,6 +244,7 @@ export default function SiteHeader() {
           >
             {cta.label}
           </Button>
+          {(hasCart || isShop) && <CartButton />}
           <UserMenu user={user} onLogout={handleLogout} />
           <button
             type="button"
@@ -278,6 +294,17 @@ export default function SiteHeader() {
                   </a>
                 </li>
               ))}
+              <li className="border-b border-line/30">
+                <Link
+                  to="/tienda"
+                  aria-current={isShop ? "page" : undefined}
+                  className={`block py-4 text-[11px] leading-[14px] font-semibold tracking-[0.18em] uppercase ${
+                    isShop ? "text-brand" : "text-text-soft"
+                  }`}
+                >
+                  Tienda
+                </Link>
+              </li>
             </ul>
             <Button
               to={cta.to}

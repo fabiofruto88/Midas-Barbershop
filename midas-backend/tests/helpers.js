@@ -1,6 +1,6 @@
 // Utilidades compartidas por las pruebas de integración.
 // Usan la base de datos del .env y borran al final todo lo que crean
-// (usuarios con email @test.midas y servicios con nombre "TEST ...").
+// (usuarios con email @test.midas, servicios con nombre "TEST ..." y categorías de tienda "TEST ...").
 process.env.NODE_ENV = 'test';
 require('dotenv').config({ quiet: true });
 
@@ -54,6 +54,10 @@ const cleanup = async () => {
   await prisma.barberAvailability.deleteMany({ where: { barberId: { in: ids } } });
   await prisma.user.deleteMany({ where: { id: { in: ids } } });
   await prisma.service.deleteMany({ where: { id: { in: serviceIds } } });
+
+  const shopCategories = { category: { name: { startsWith: 'TEST ' } } };
+  await prisma.product.deleteMany({ where: { OR: [shopCategories, { name: { startsWith: 'TEST ' } }] } });
+  await prisma.productCategory.deleteMany({ where: { name: { startsWith: 'TEST ' } } });
 };
 
 module.exports = { app, prisma, request, agent, loginAs, loginAdmin, createUserWithRole, testEmail, cleanup };

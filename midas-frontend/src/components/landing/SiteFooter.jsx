@@ -219,6 +219,11 @@ export default function SiteFooter() {
             derechos reservados.
           </p>
           <ul className="flex flex-wrap gap-6 tracking-[0.05em]">
+            <li>
+              <Link to="/tienda" className="hit-area transition-colors hover:text-brand">
+                Tienda
+              </Link>
+            </li>
             <li>Privacidad</li>
             <li>Términos</li>
             <li>

@@ -34,6 +34,21 @@ export const adminApi = {
   deleteUser: (id) => api(`/users/${id}`, { method: 'DELETE' }),
   uploadAvatar: (id, file) => api(`/users/${id}/avatar`, { method: 'POST', body: imageForm(file) }),
   removeAvatar: (id) => api(`/users/${id}/avatar`, { method: 'DELETE' }),
+  products: () => api('/shop/products?includeHidden=true'),
+  createCategory: (data) => api('/shop/categories', { method: 'POST', body: data }),
+  updateCategory: (id, data) => api(`/shop/categories/${id}`, { method: 'PATCH', body: data }),
+  deleteCategory: (id) => api(`/shop/categories/${id}`, { method: 'DELETE' }),
+  createProduct: (data) => api('/shop/products', { method: 'POST', body: data }),
+  updateProduct: (id, data) => api(`/shop/products/${id}`, { method: 'PATCH', body: data }),
+  deleteProduct: (id) => api(`/shop/products/${id}`, { method: 'DELETE' }),
+  uploadProductImage: (id, file) => api(`/shop/products/${id}/image`, { method: 'POST', body: imageForm(file) }),
+  removeProductImage: (id) => api(`/shop/products/${id}/image`, { method: 'DELETE' }),
+}
+
+// Tienda pública: no requiere sesión.
+export const shopApi = {
+  categories: () => api('/shop/categories'),
+  products: () => api('/shop/products'),
 }
 
 export const reviewsApi = {
