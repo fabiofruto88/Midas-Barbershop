@@ -1,12 +1,7 @@
-# Blueprint de Render: API de Midas + PostgreSQL.
+# Blueprint de Render: API de Midas. La base de datos vive en Neon (neon.tech).
 # Render → New → Blueprint → seleccionar este repositorio.
 # Tras el primer despliegue: completar CORS_ORIGIN, credenciales de Cloudinary y VAPID en el panel,
 # y ejecutar el seed desde la Shell del servicio: npm run prisma:seed
-databases:
-  - name: midas-db
-    plan: free
-    databaseName: midas_db
-
 services:
   - type: web
     name: midas-api
@@ -20,10 +15,12 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Neon: URL con "-pooler" en el host (consultas de la app).
       - key: DATABASE_URL
-        fromDatabase:
-          name: midas-db
-          property: connectionString
+        sync: false
+      # Neon: misma URL SIN "-pooler" (la usa prisma migrate deploy).
+      - key: DIRECT_URL
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
