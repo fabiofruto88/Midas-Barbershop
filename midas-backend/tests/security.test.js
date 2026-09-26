@@ -34,7 +34,7 @@ test('el token de un usuario eliminado deja de funcionar', async () => {
 });
 
 test('un token de invitado no sirve como cookie de sesión', async () => {
-  const guestToken = signGuestToken('00000000-0000-4000-8000-000000000000');
+  const guestToken = signGuestToken({ id: '00000000-0000-4000-8000-000000000000', date: '2030-01-01', timeSlot: '10:00' });
   const res = await request(app).get('/api/v1/auth/me').set('Cookie', `token=${guestToken}`);
   assert.equal(res.status, 401);
 });

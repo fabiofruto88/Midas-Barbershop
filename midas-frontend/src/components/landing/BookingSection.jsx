@@ -6,7 +6,7 @@ import { availabilityQueryOptions, useBarbers, useServices } from '../../hooks/u
 import { useBookingStore } from '../../store/bookingStore'
 import { appointmentsApi } from '../../services/midas'
 import { queryKeys } from '../../lib/queryClient'
-import { formatPrice, nextDays, parseDate, toDateString } from '../../lib/format'
+import { formatPrice, nextDays, parseDate, toDateString, businessToday } from '../../lib/format'
 import { barberProfiles } from '../../content/landing'
 import { barberPortrait } from '../../lib/barberPortrait'
 import iconRadioChecked from '../../assets/landing/icon-radio-checked.svg'
@@ -130,7 +130,7 @@ export default function BookingSection() {
 
   const days = useMemo(() => bookableDays(), [])
   const dayValues = useMemo(() => days.map(toDateString), [days])
-  const today = toDateString(new Date())
+  const today = businessToday()
 
   // Valores por defecto (el diseño muestra un barbero, servicio y día activos).
   useEffect(() => {

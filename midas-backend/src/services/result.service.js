@@ -21,11 +21,13 @@ const uploadResult = async (appointmentId, user, { buffer, notes }) => {
   try {
     result = await prisma.$transaction(async (tx) => {
       // Subir el resultado da la cita por completada (cobrada al precio de lista).
+      // updateMany con status PENDING: si entretanto se canceló o se cobró, no se pisa.
       if (appointment.status === 'PENDING') {
-        await tx.appointment.update({
-          where: { id: appointmentId },
+        const { count } = await tx.appointment.updateMany({
+          where: { id: appointmentId, status: 'PENDING' },
           data: { status: 'COMPLETED', completedAt: new Date(), chargedAmount: appointment.listPrice },
         });
+        if (count === 0) throw new AppError('La cita cambió de estado; vuelve a intentarlo.', 409);
       }
       return tx.serviceResult.upsert({
         where: { appointmentId },

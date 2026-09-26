@@ -137,6 +137,21 @@ describe('GET /finance/summary', () => {
     assert.deepEqual(res.body.series, []);
   });
 
+  test('el admin con un barberId que no es de un barbero → 404; fechas fuera de rango → 400', async () => {
+    const { user: someClient } = await createUserWithRole(admin, 'CLIENT', 'finanzas-no-barbero');
+    assert.equal((await summary(admin, { period: 'day', date: '2025-03-03', barberId: someClient.id })).status, 404);
+    assert.equal((await summary(admin, { period: 'week', date: '9999-12-31' })).status, 400);
+  });
+
+  test('el ticket medio se redondea a pesos enteros', async () => {
+    // Semana del 2025-03-03 de otro barbero: 35000 / 1. Se añade 1 cita de 20000 → 55000 / 2 = 27500;
+    // y otra de 10000 → 65000 / 3 = 21666.67 → 21667.
+    await insert('2025-03-04', '10:00', haircut, { ...completed(20000), barberId: otherBarber.user.id });
+    await insert('2025-03-04', '11:00', haircut, { ...completed(10000), barberId: otherBarber.user.id });
+    const res = await summary(admin, { period: 'week', date: '2025-03-03', barberId: otherBarber.user.id });
+    assert.equal(res.body.totals.averageTicket, 21667);
+  });
+
   test('un barbero no puede ver los datos de otro aunque pase barberId', async () => {
     const res = await summary(barber.client, { period: 'day', date: '2025-03-03', barberId: otherBarber.user.id });
     assert.equal(res.body.barberId, barber.user.id);
@@ -189,6 +204,23 @@ describe('cobro al completar', () => {
     assert.equal((await barber.client.patch(url).send({ paymentMethod: 'BITCOIN' })).status, 400);
     assert.equal((await barber.client.patch(url).send({ priceNote: 'x'.repeat(201) })).status, 400);
     assert.equal((await barber.client.patch(url).send({ status: 'CANCELLED' })).status, 400);
+    // Antes se convertían en silencio (null → 0: un servicio "gratis").
+    for (const chargedAmount of [null, '', true, [5], '0x10', '1e3']) {
+      const res = await barber.client.patch(url).send({ chargedAmount });
+      assert.equal(res.status, 400, `chargedAmount=${JSON.stringify(chargedAmount)}`);
+    }
+    const stored = await prisma.appointment.findUnique({ where: { id: appointment.id } });
+    assert.equal(stored.status, 'PENDING');
+  });
+
+  test('los importes de la respuesta son números, con o sin importe explícito', async () => {
+    for (const body of [{}, { chargedAmount: 25000, tipAmount: 2000 }]) {
+      const appointment = await insert(slotAt(-5).date, slotAt(-5).timeSlot, haircut);
+      const res = await barber.client.patch(`/api/v1/appointments/${appointment.id}/complete`).send(body);
+      assert.equal(res.status, 200);
+      for (const field of ['listPrice', 'chargedAmount', 'tipAmount']) assert.equal(typeof res.body[field], 'number', field);
+      await prisma.appointment.delete({ where: { id: appointment.id } });
+    }
   });
 });
 

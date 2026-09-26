@@ -118,9 +118,9 @@ export default function ShopPage() {
           {visible.length === 0 ? (
             <Alert>No encontramos productos con ese filtro.</Alert>
           ) : (
-            <ul className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+            <ul className="grid auto-rows-fr grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
               {visible.map((product) => (
-                <li key={product.id} className="flex">
+                <li key={product.id} className="flex min-w-0">
                   <ProductCard product={product} />
                 </li>
               ))}

@@ -85,8 +85,10 @@ describe('GET /appointments/agenda', () => {
   });
 
   test('el admin ve todas las agendas o filtra por barbero', async () => {
+    // Puede haber citas de otros barberos (datos demo): se cuentan solo las de este test.
     const all = await admin.get(`/api/v1/appointments/agenda?date=${date}`);
-    assert.equal(all.body.appointments.length, 3);
+    const ours = [barber.user.id, otherBarber.user.id];
+    assert.equal(all.body.appointments.filter((item) => ours.includes(item.barber.id)).length, 3);
     const filtered = await admin.get(`/api/v1/appointments/agenda?date=${date}&barberId=${otherBarber.user.id}`);
     assert.equal(filtered.body.appointments.length, 1);
     assert.equal(filtered.body.appointments[0].guestName, 'Invitado Agenda');

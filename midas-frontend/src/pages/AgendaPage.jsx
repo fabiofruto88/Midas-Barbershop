@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useBarbers } from '../hooks/useCatalog'
 import { queryKeys } from '../lib/queryClient'
 import { optimizedImageUrl } from '../lib/images'
-import { formatLongDate, formatPrice, formatTime, hoursUntil, parseDate, toDateString } from '../lib/format'
+import { formatLongDate, formatPrice, formatTime, hoursUntil, parseDate, toDateString, businessToday } from '../lib/format'
 import ResultUploader from '../components/agenda/ResultUploader'
 import ChargeForm from '../components/agenda/ChargeForm'
 import { paymentLabel } from '../lib/payments'
@@ -26,7 +26,7 @@ const shiftDate = (date, days) => {
 export default function AgendaPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
-  const today = toDateString(new Date())
+  const today = businessToday()
   const [date, setDate] = useState(today)
   const [barberId, setBarberId] = useState('')
   const { data: barbers } = useBarbers()

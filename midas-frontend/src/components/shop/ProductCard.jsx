@@ -26,7 +26,7 @@ export default function ProductCard({ product }) {
   }
 
   return (
-    <article className="group flex flex-col border border-border bg-surface transition-colors duration-200 hover:border-brand/40">
+    <article className="group flex w-full min-w-0 flex-col border border-border bg-surface transition-colors duration-200 hover:border-brand/40">
       <div className="relative aspect-square overflow-hidden">
         <ProductImage
           product={product}
@@ -39,9 +39,15 @@ export default function ProductCard({ product }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3 sm:p-4">
-        <p className="text-[9px] leading-3 font-bold tracking-[0.2em] text-muted uppercase">{product.category.name}</p>
-        <h3 className="font-display text-base leading-snug font-semibold text-text sm:text-lg">{product.name}</h3>
-        {product.description && <p className="line-clamp-2 text-xs leading-5 text-muted">{product.description}</p>}
+        <p className="truncate text-[9px] leading-3 font-bold tracking-[0.2em] text-muted uppercase">{product.category.name}</p>
+        {/* Alturas reservadas (2 líneas) para que precio y botón queden alineados en todas las cards. */}
+        <h3
+          title={product.name}
+          className="line-clamp-2 min-h-11 font-display text-base leading-5.5 font-semibold text-balance text-text sm:min-h-13 sm:text-lg sm:leading-6.5"
+        >
+          {product.name}
+        </h3>
+        <p className="line-clamp-2 min-h-10 text-xs leading-5 text-muted">{product.description}</p>
         <p className="mt-auto pt-2 text-base font-semibold text-brand tabular-nums">{formatPrice(product.price)}</p>
 
         {soldOut ? (

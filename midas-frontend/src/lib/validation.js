@@ -18,6 +18,20 @@ export const rules = {
   required: (value) => (value ? null : 'Este campo es obligatorio.'),
 }
 
+// Precio escrito a la colombiana: "25.000", "25,000", "$ 25.000" o "19,99" → número (NaN si no es válido).
+export const parsePrice = (value) => {
+  const text = String(value).replace(/[\s$]/g, '')
+  if (/^\d{1,3}([.,]\d{3})+$/.test(text)) return Number(text.replace(/[.,]/g, '')) // separador de miles
+  if (/^\d+([.,]\d{1,2})?$/.test(text)) return Number(text.replace(',', '.'))
+  return Number.NaN
+}
+
+export const priceError = (value) => {
+  const price = parsePrice(value)
+  if (Number.isNaN(price)) return 'Escribe un precio válido (ej. 25000 o 25.000), con máximo 2 decimales.'
+  return price > 0 ? null : 'El precio debe ser mayor que 0.'
+}
+
 // Devuelve { campo: mensaje } solo para los campos con error.
 export const validateForm = (values, schema) =>
   Object.fromEntries(

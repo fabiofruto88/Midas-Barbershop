@@ -17,6 +17,9 @@ const getUserById = async (id) => {
   return user;
 };
 
+// Bloquea la fila del usuario hasta el fin de la transacción (createAppointment bloquea la del barbero).
+const lockUser = (tx, id) => tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${id} FOR UPDATE`;
+
 const ensureEmailAvailable = async (email, excludeId) => {
   const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
   if (existing && existing.id !== excludeId) {
@@ -43,18 +46,20 @@ const updateUser = async (id, { password, ...data }, currentUserId) => {
   }
 
   const leavesBarberRole = roleChanges && user.role === 'BARBER';
-  if (leavesBarberRole) {
-    const pending = await prisma.appointment.count({ where: { barberId: id, status: 'PENDING' } });
-    if (pending > 0) {
-      throw new AppError('El barbero tiene citas pendientes; cancélalas o reasígnalas antes de cambiar su rol.', 409);
-    }
-  }
 
   if (password) data.passwordHash = await hashPassword(password);
 
   return prisma.$transaction(async (tx) => {
-    // Si deja de ser barbero, su horario base ya no aplica.
-    if (leavesBarberRole) await tx.barberAvailability.deleteMany({ where: { barberId: id } });
+    if (leavesBarberRole) {
+      // Mismo bloqueo que toma la reserva: una cita no puede colarse entre el recuento y el cambio de rol.
+      await lockUser(tx, id);
+      const pending = await tx.appointment.count({ where: { barberId: id, status: 'PENDING' } });
+      if (pending > 0) {
+        throw new AppError('El barbero tiene citas pendientes; cancélalas o reasígnalas antes de cambiar su rol.', 409);
+      }
+      // Si deja de ser barbero, su horario base ya no aplica.
+      await tx.barberAvailability.deleteMany({ where: { barberId: id } });
+    }
     return tx.user.update({ where: { id }, data, select: publicUserSelect });
   });
 };
@@ -63,17 +68,17 @@ const deleteUser = async (id, currentUserId) => {
   if (id === currentUserId) throw new AppError('No puedes eliminar tu propia cuenta.', 400);
   const { avatarUrl } = await getUserById(id);
 
-  const appointments = await prisma.appointment.count({
-    where: { OR: [{ barberId: id }, { clientId: id }] },
+  await prisma.$transaction(async (tx) => {
+    await lockUser(tx, id);
+    const appointments = await tx.appointment.count({
+      where: { OR: [{ barberId: id }, { clientId: id }] },
+    });
+    if (appointments > 0) {
+      throw new AppError('El usuario tiene citas registradas y no puede eliminarse.', 409);
+    }
+    await tx.barberAvailability.deleteMany({ where: { barberId: id } });
+    await tx.user.delete({ where: { id } });
   });
-  if (appointments > 0) {
-    throw new AppError('El usuario tiene citas registradas y no puede eliminarse.', 409);
-  }
-
-  await prisma.$transaction([
-    prisma.barberAvailability.deleteMany({ where: { barberId: id } }),
-    prisma.user.delete({ where: { id } }),
-  ]);
   if (avatarUrl) await storage.deleteImageByUrl(avatarUrl);
 };
 

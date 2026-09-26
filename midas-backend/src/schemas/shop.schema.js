@@ -1,4 +1,4 @@
-const { z, uuid, price } = require('../utils/validators');
+const { z, uuid, numeric, price } = require('../utils/validators');
 
 const atLeastOne = (schema) =>
   schema.refine((data) => Object.keys(data).length > 0, 'Debes enviar al menos un campo para actualizar.');
@@ -10,11 +10,13 @@ const categoryName = z
   .min(2, 'El nombre debe tener al menos 2 caracteres.')
   .max(50, 'El nombre no puede superar los 50 caracteres.');
 
-const sortOrder = z.coerce
-  .number({ error: 'El orden debe ser un número.' })
-  .int('El orden debe ser un número entero.')
-  .min(0, 'El orden no puede ser negativo.')
-  .max(999, 'El orden no puede superar 999.');
+const sortOrder = numeric(
+  z
+    .number({ error: 'El orden debe ser un número.' })
+    .int('El orden debe ser un número entero.')
+    .min(0, 'El orden no puede ser negativo.')
+    .max(999, 'El orden no puede superar 999.')
+);
 
 const createCategoryBody = z.strictObject({ name: categoryName, sortOrder: sortOrder.optional() });
 

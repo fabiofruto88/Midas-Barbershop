@@ -1,4 +1,4 @@
-const { z, uuid, name, phone, email, hourTime, dateOnly, idParam } = require('../utils/validators');
+const { z, uuid, name, phone, email, numeric, hourTime, dateOnly, idParam } = require('../utils/validators');
 
 const availabilityQuery = z.object({
   barberId: uuid('barberId'),
@@ -13,7 +13,7 @@ const createAppointmentBody = z.strictObject({
   timeSlot: hourTime,
   guestName: name.optional(),
   guestPhone: phone.optional(),
-  guestEmail: email.optional(),
+  guestEmail: email.nullable().optional(),
 });
 
 const agendaQuery = z.object({
@@ -33,11 +33,13 @@ const resultBody = z.strictObject({
 
 // Importe ≥ 0 con máximo 2 decimales y dentro de Decimal(10, 2).
 const money = (label) =>
-  z.coerce
-    .number({ error: `${label} debe ser un número.` })
-    .min(0, `${label} no puede ser negativo.`)
-    .max(99999999.99, `${label} es demasiado alto.`)
-    .refine((value) => Number.isInteger(Number((value * 100).toFixed(6))), `${label} admite como máximo 2 decimales.`);
+  numeric(
+    z
+      .number({ error: `${label} debe ser un número.` })
+      .min(0, `${label} no puede ser negativo.`)
+      .max(99999999.99, `${label} es demasiado alto.`)
+      .refine((value) => Number.isInteger(Number((value * 100).toFixed(6))), `${label} admite como máximo 2 decimales.`)
+  );
 
 // Cierre de la cita: todo opcional; sin importe se cobra el precio de lista. null borra el campo.
 const completeBody = z.strictObject({

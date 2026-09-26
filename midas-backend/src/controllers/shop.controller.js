@@ -4,7 +4,7 @@ const isAdmin = (req) => req.user?.role === 'ADMIN';
 
 // ---------- Categorías ----------
 const listCategories = async (req, res) => {
-  res.status(200).json(await shopService.listCategories());
+  res.status(200).json(await shopService.listCategories({ includeHidden: isAdmin(req) }));
 };
 
 const createCategory = async (req, res) => {

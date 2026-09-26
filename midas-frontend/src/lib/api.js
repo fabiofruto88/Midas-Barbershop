@@ -1,5 +1,7 @@
 // Cliente HTTP mínimo sobre fetch. La sesión viaja en la cookie HttpOnly (credentials: 'include'),
 // nunca en localStorage.
+import { queryClient, queryKeys } from './queryClient'
+
 const BASE_URL = import.meta.env.VITE_API_URL ?? '/api/v1'
 
 export class ApiError extends Error {
@@ -30,6 +32,9 @@ export async function api(path, { method = 'GET', body, headers } = {}) {
 
   const data = response.status === 204 ? null : await response.json().catch(() => null)
   if (!response.ok) {
+    // Sesión caducada: se olvida el usuario en caché para que la UI no siga actuando como si hubiera sesión
+    // (p. ej. reservar como cliente sin enviar datos de invitado). /auth/* gestiona sus propios 401.
+    if (response.status === 401 && !path.startsWith('/auth/')) queryClient.setQueryData(queryKeys.me, null)
     throw new ApiError(response.status, data?.error ?? 'Ocurrió un error inesperado.', data?.details)
   }
   return data

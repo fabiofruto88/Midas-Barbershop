@@ -11,8 +11,15 @@ const SLOT_TAKEN = 'El horario seleccionado ya no está disponible.';
 const CANCELLATION_WINDOW_HOURS = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// Las fechas @db.Date se devuelven como "YYYY-MM-DD" (contrato de la API).
-const formatAppointment = (appointment) => ({ ...appointment, date: toDateString(appointment.date) });
+// Las fechas @db.Date se devuelven como "YYYY-MM-DD" y los importes como número (contrato de la API).
+const MONEY_FIELDS = ['listPrice', 'chargedAmount', 'tipAmount'];
+const formatAppointment = (appointment) => {
+  const formatted = { ...appointment, date: toDateString(appointment.date) };
+  for (const field of MONEY_FIELDS) {
+    if (formatted[field] != null) formatted[field] = Number(formatted[field]);
+  }
+  return formatted;
+};
 
 // Estado de la agenda de un barbero para un día: bloques del horario base y bloques ocupados.
 // Recibe `db` para poder ejecutarse dentro de una transacción.
@@ -133,7 +140,7 @@ const createAppointment = async (input, user) => {
   }
 
   const result = formatAppointment(appointment);
-  if (!isClient) result.guestToken = signGuestToken(appointment.id);
+  if (!isClient) result.guestToken = signGuestToken(result);
   return result;
 };
 

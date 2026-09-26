@@ -18,6 +18,9 @@ self.addEventListener('push', (event) => {
   )
 })
 
+// Toma el control de las pestañas abiertas: sin esto, navigate() falla en las que no controla.
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   const target = new URL(event.notification.data?.url || '/', self.location.origin).href
@@ -26,8 +29,10 @@ self.addEventListener('notificationclick', (event) => {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
       const existing = windows.find((client) => client.url.startsWith(self.location.origin))
       if (existing) {
-        existing.navigate(target)
-        return existing.focus()
+        return existing
+          .focus()
+          .then((client) => client.navigate(target))
+          .catch(() => self.clients.openWindow(target))
       }
       return self.clients.openWindow(target)
     })

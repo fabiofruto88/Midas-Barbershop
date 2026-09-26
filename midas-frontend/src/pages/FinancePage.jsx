@@ -5,7 +5,7 @@ import { appointmentsApi, financeApi } from '../services/midas'
 import { useAuth } from '../hooks/useAuth'
 import { useBarbers } from '../hooks/useCatalog'
 import { queryKeys } from '../lib/queryClient'
-import { formatLongDate, formatPrice, formatTime, parseDate, toDateString } from '../lib/format'
+import { formatLongDate, formatPrice, formatTime, parseDate, toDateString, businessToday } from '../lib/format'
 import { paymentLabel } from '../lib/payments'
 import ChargeForm from '../components/agenda/ChargeForm'
 import Alert from '../components/ui/Alert'
@@ -219,7 +219,7 @@ function EntryItem({ entry, showBarber }) {
 export default function FinancePage() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
-  const today = toDateString(new Date())
+  const today = businessToday()
   const [period, setPeriod] = useState('day')
   const [date, setDate] = useState(today)
   const [barberId, setBarberId] = useState('')

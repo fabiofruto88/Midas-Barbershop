@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const ms = require('./ms');
 const config = require('../config/env');
+const { wallClock } = require('./time');
 
 const ALGORITHM = 'HS256';
 const SESSION_TOKEN_TYPE = 'session';
@@ -20,12 +21,20 @@ const verifyToken = (token) => {
 
 // Token de invitado: permite a un cliente no registrado cancelar SU cita (sin columnas extra en BD).
 const GUEST_TOKEN_TYPE = 'guest-appointment';
+const GUEST_TOKEN_GRACE_SECONDS = 24 * 60 * 60;
 
-const signGuestToken = (appointmentId) =>
-  jwt.sign({ sub: appointmentId, type: GUEST_TOKEN_TYPE }, config.jwt.secret, {
-    algorithm: ALGORITHM,
-    expiresIn: '30d',
-  });
+// Caduca un día después de la cita (el margen cubre el desfase entre hora local y UTC):
+// un TTL fijo dejaría sin forma de cancelar a quien reserva con más antelación.
+const signGuestToken = ({ id, date, timeSlot }) =>
+  jwt.sign(
+    {
+      sub: id,
+      type: GUEST_TOKEN_TYPE,
+      exp: Math.floor(wallClock(date, timeSlot).getTime() / 1000) + GUEST_TOKEN_GRACE_SECONDS,
+    },
+    config.jwt.secret,
+    { algorithm: ALGORITHM }
+  );
 
 const verifyGuestToken = (token, appointmentId) => {
   try {

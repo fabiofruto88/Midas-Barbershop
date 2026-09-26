@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '../../services/midas'
 import { queryKeys } from '../../lib/queryClient'
 import { formatPrice } from '../../lib/format'
-import { serverFieldErrors } from '../../lib/validation'
+import { parsePrice, priceError, serverFieldErrors } from '../../lib/validation'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
@@ -17,15 +17,15 @@ const emptyForm = { name: '', description: '', price: '' }
 const validate = ({ name, price }) => {
   const errors = {}
   if (name.trim().length < 2) errors.name = 'El nombre debe tener al menos 2 caracteres.'
-  if (!(Number(price) > 0)) errors.price = 'El precio debe ser mayor que 0.'
-  else if (!/^\d+(\.\d{1,2})?$/.test(String(price).trim())) errors.price = 'Máximo 2 decimales.'
+  const invalidPrice = priceError(price)
+  if (invalidPrice) errors.price = invalidPrice
   return errors
 }
 
 const toPayload = ({ name, description, price }) => ({
   name: name.trim(),
   description: description.trim() || null,
-  price: Number(price),
+  price: parsePrice(price),
 })
 
 export default function ServicesAdminPage() {

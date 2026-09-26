@@ -65,10 +65,34 @@ describe('Tienda: categorías', () => {
     const res = await admin.patch(`/api/v1/shop/categories/${category.id}`).send({ name: renamed, sortOrder: 5 });
     assert.equal(res.status, 200);
     assert.equal(res.body.name, renamed);
+    await createProduct(category.id);
 
     const pub = await request(app).get('/api/v1/shop/categories');
     assert.equal(pub.status, 200);
     assert.ok(pub.body.some((item) => item.id === category.id && item.sortOrder === 5));
+  });
+
+  test('el público no ve categorías sin productos visibles ni cuenta los ocultos; el admin sí', async () => {
+    const empty = await createCategory();
+    const mixed = await createCategory();
+    await createProduct(mixed.id);
+    await createProduct(mixed.id, { isVisible: false });
+
+    const pub = (await request(app).get('/api/v1/shop/categories')).body;
+    assert.ok(!pub.some((item) => item.id === empty.id));
+    assert.equal(pub.find((item) => item.id === mixed.id)._count.products, 1);
+
+    const all = (await admin.get('/api/v1/shop/categories')).body;
+    assert.ok(all.some((item) => item.id === empty.id));
+    assert.equal(all.find((item) => item.id === mixed.id)._count.products, 2);
+  });
+
+  test('sortOrder rechaza null y valores no numéricos', async () => {
+    const category = await createCategory();
+    for (const sortOrder of [null, '', true, 'abc']) {
+      const res = await admin.patch(`/api/v1/shop/categories/${category.id}`).send({ sortOrder });
+      assert.equal(res.status, 400, `sortOrder=${JSON.stringify(sortOrder)}`);
+    }
   });
 
   test('no permite nombres repetidos sin distinguir mayúsculas', async () => {

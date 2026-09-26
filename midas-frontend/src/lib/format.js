@@ -38,10 +38,34 @@ export const formatTime = (slot) => {
   )
 }
 
-// Próximos N días a partir de hoy.
+// La agenda vive en la hora de la barbería, no en la del navegador (igual que el backend):
+// un cliente con el móvil en otra zona horaria debe ver el mismo "hoy" y las mismas horas.
+const BUSINESS_TIMEZONE = import.meta.env.VITE_BUSINESS_TIMEZONE ?? 'America/Bogota'
+const HOUR_MS = 60 * 60 * 1000
+
+const businessClock = new Intl.DateTimeFormat('en-CA', {
+  timeZone: BUSINESS_TIMEZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+})
+
+// Hora actual de la barbería como "reloj de pared" en milisegundos UTC.
+const businessNowMs = () => {
+  const parts = Object.fromEntries(businessClock.formatToParts(new Date()).map(({ type, value }) => [type, Number(value)]))
+  return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second)
+}
+
+// "YYYY-MM-DD" de hoy en la barbería.
+export const businessToday = () => new Date(businessNowMs()).toISOString().slice(0, 10)
+
+// Próximos N días a partir de hoy (en la barbería).
 export const nextDays = (count) => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const today = parseDate(businessToday())
   return Array.from({ length: count }, (_, i) => {
     const date = new Date(today)
     date.setDate(today.getDate() + i)
@@ -49,10 +73,9 @@ export const nextDays = (count) => {
   })
 }
 
-// Horas que faltan para una cita (según el reloj del navegador).
+// Horas que faltan para una cita (según la hora de la barbería).
 export const hoursUntil = (date, slot) => {
+  const [year, month, day] = date.split('-').map(Number)
   const [hours] = slot.split(':').map(Number)
-  const start = parseDate(date)
-  start.setHours(hours)
-  return (start.getTime() - Date.now()) / (60 * 60 * 1000)
+  return (Date.UTC(year, month - 1, day, hours) - businessNowMs()) / HOUR_MS
 }

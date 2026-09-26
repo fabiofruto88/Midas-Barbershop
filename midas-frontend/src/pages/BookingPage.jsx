@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import { useAuth } from '../hooks/useAuth'
 import { useBarbers, useServices } from '../hooks/useCatalog'
 import { useBookingStore } from '../store/bookingStore'
-import { formatLongDate, formatPrice, formatTime, toDateString } from '../lib/format'
+import { formatLongDate, formatPrice, formatTime, businessToday } from '../lib/format'
 import { barberPortrait } from '../lib/barberPortrait'
 import ServiceList from '../components/ServiceList'
 import Step from '../components/booking/Step'
@@ -25,7 +25,7 @@ export default function BookingPage() {
 
   // Descarta del borrador guardado una fecha que ya pasó.
   useEffect(() => {
-    if (date && date < toDateString(new Date())) selectDate(null)
+    if (date && date < businessToday()) selectDate(null)
   }, [date, selectDate])
 
   const service = services?.find((item) => item.id === serviceId)

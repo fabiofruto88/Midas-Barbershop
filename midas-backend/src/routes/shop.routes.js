@@ -16,7 +16,7 @@ const router = Router();
 const admin = [authenticate, authorize('ADMIN')];
 
 // Catálogo público: no hace falta sesión (la compra se cierra por WhatsApp).
-router.get('/categories', controller.listCategories);
+router.get('/categories', optionalAuth, controller.listCategories);
 router.get('/products', optionalAuth, validate({ query: listProductsQuery }), controller.listProducts);
 router.get('/products/:id', optionalAuth, validate({ params: idParam }), controller.getProduct);
 

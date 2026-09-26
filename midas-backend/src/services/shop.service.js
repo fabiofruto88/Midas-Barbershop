@@ -3,11 +3,14 @@ const AppError = require('../utils/AppError');
 const storage = require('./storage.service');
 
 // ---------- Categorías ----------
-const listCategories = () =>
-  prisma.productCategory.findMany({
+// El público solo cuenta (y ve) categorías con productos visibles; el admin las ve todas.
+const listCategories = async ({ includeHidden = false } = {}) => {
+  const categories = await prisma.productCategory.findMany({
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-    include: { _count: { select: { products: true } } },
+    include: { _count: { select: { products: includeHidden ? true : { where: { isVisible: true } } } } },
   });
+  return includeHidden ? categories : categories.filter((category) => category._count.products > 0);
+};
 
 const getCategory = async (id) => {
   const category = await prisma.productCategory.findUnique({ where: { id } });

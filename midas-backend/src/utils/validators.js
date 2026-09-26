@@ -43,16 +43,28 @@ const dateOnly = z
   .refine((value) => {
     const date = new Date(`${value}T00:00:00Z`);
     return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
-  }, 'La fecha no existe en el calendario.');
+  }, 'La fecha no existe en el calendario.')
+  // Años extremos rompen el cálculo de rangos (el año 10000 no cabe en "YYYY-MM-DD").
+  .refine((value) => value >= '2000-01-01' && value <= '2999-12-31', 'La fecha está fuera del rango admitido.');
+
+// Número JSON o texto decimal ("25000", "19.99"). A diferencia de z.coerce, rechaza
+// null, "", true, [5], "0x10" o "1e3" en lugar de convertirlos en silencio (null → 0).
+const numeric = (schema) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && /^\s*-?\d+(\.\d+)?\s*$/.test(value) ? Number(value) : value),
+    schema
+  );
 
 // Precio en COP: positivo, con máximo 2 decimales y dentro de Decimal(10, 2).
-const price = z.coerce
-  .number({ error: 'El precio debe ser un número.' })
-  .positive('El precio debe ser mayor que 0.')
-  .max(99999999.99, 'El precio es demasiado alto.')
-  // toFixed absorbe el error de coma flotante (19.99 * 100 = 1998.9999999999998).
-  .refine((value) => Number.isInteger(Number((value * 100).toFixed(6))), 'El precio admite como máximo 2 decimales.');
+const price = numeric(
+  z
+    .number({ error: 'El precio debe ser un número.' })
+    .positive('El precio debe ser mayor que 0.')
+    .max(99999999.99, 'El precio es demasiado alto.')
+    // toFixed absorbe el error de coma flotante (19.99 * 100 = 1998.9999999999998).
+    .refine((value) => Number.isInteger(Number((value * 100).toFixed(6))), 'El precio admite como máximo 2 decimales.')
+);
 
 const idParam = z.object({ id: uuid() });
 
-module.exports = { z, uuid, email, password, name, phone, price, hourTime, dateOnly, idParam };
+module.exports = { z, uuid, email, password, name, phone, numeric, price, hourTime, dateOnly, idParam };

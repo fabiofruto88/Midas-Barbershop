@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi, shopApi } from '../../services/midas'
 import { queryKeys } from '../../lib/queryClient'
 import { formatPrice } from '../../lib/format'
-import { serverFieldErrors } from '../../lib/validation'
+import { parsePrice, priceError, serverFieldErrors } from '../../lib/validation'
 import { ACCEPTED_IMAGES, imageFileError } from '../../lib/imageFile'
 import { useFilePreview } from '../../hooks/useFilePreview'
 import ProductImage from '../../components/shop/ProductImage'
@@ -23,8 +23,8 @@ const validateProduct = ({ name, categoryId, price }) => {
   const errors = {}
   if (name.trim().length < 2) errors.name = 'El nombre debe tener al menos 2 caracteres.'
   if (!categoryId) errors.categoryId = 'Elige una categoría.'
-  if (!(Number(price) > 0)) errors.price = 'El precio debe ser mayor que 0.'
-  else if (!/^\d+(\.\d{1,2})?$/.test(String(price).trim())) errors.price = 'Máximo 2 decimales.'
+  const invalidPrice = priceError(price)
+  if (invalidPrice) errors.price = invalidPrice
   return errors
 }
 
@@ -32,7 +32,7 @@ const toPayload = ({ name, categoryId, description, price, isAvailable, isVisibl
   name: name.trim(),
   categoryId,
   description: description.trim() || null,
-  price: Number(price),
+  price: parsePrice(price),
   isAvailable,
   isVisible,
   isFeatured,
@@ -444,12 +444,18 @@ function CategoryRow({ category, categories, index }) {
       invalidate()
     },
   })
-  // Subir/bajar intercambia el orden con la vecina.
+  // Subir/bajar intercambia con la vecina y renumera todas 0..n: tras borrar o crear categorías
+  // puede haber huecos o empates en sortOrder, y un simple intercambio no las reordenaría bien.
   const move = useMutation({
     mutationFn: async (direction) => {
-      const neighbor = categories[index + direction]
-      await adminApi.updateCategory(category.id, { sortOrder: index + direction })
-      await adminApi.updateCategory(neighbor.id, { sortOrder: index })
+      const ordered = [...categories]
+      ;[ordered[index], ordered[index + direction]] = [ordered[index + direction], ordered[index]]
+      await Promise.all(
+        ordered
+          .map((item, position) => ({ item, position }))
+          .filter(({ item, position }) => item.sortOrder !== position)
+          .map(({ item, position }) => adminApi.updateCategory(item.id, { sortOrder: position }))
+      )
     },
     onSettled: invalidate,
   })

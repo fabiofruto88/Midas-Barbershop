@@ -1,5 +1,6 @@
 const prisma = require('../config/prisma');
 const { wallClock, toDateString } = require('../utils/time');
+const { ensureBarber } = require('./user.service');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PAYMENT_METHODS = ['CASH', 'CARD', 'TRANSFER'];
@@ -7,6 +8,8 @@ const PAYMENT_METHODS = ['CASH', 'CARD', 'TRANSFER'];
 // Los importes se suman en centavos (enteros) para no arrastrar errores de coma flotante.
 const toCents = (value) => (value == null ? 0 : Math.round(Number(value) * 100));
 const fromCents = (cents) => cents / 100;
+// Los promedios se muestran en pesos enteros (225000 / 7 → 32143), como indica el contrato.
+const roundToPeso = (cents) => Math.round(cents / 100) * 100;
 
 const addDays = (date, days) => toDateString(new Date(wallClock(date).getTime() + days * DAY_MS));
 
@@ -102,7 +105,7 @@ const summarize = (completed) => {
       revenue: fromCents(revenue),
       tips: fromCents(tips),
       total: fromCents(revenue + tips),
-      averageTicket: services ? fromCents(Math.round(revenue / services)) : 0,
+      averageTicket: services ? fromCents(roundToPeso(revenue / services)) : 0,
       listRevenue: fromCents(listRevenue),
       adjustment: fromCents(revenue - listRevenue),
       adjustedUp,
@@ -114,7 +117,7 @@ const summarize = (completed) => {
         ...service,
         revenue: fromCents(service.revenue),
         tips: fromCents(service.tips),
-        averagePrice: fromCents(Math.round(service.revenue / service.count)),
+        averagePrice: fromCents(roundToPeso(service.revenue / service.count)),
       })),
     byPaymentMethod: [...byMethod.entries()]
       .filter(([, { count }]) => count > 0)
@@ -150,6 +153,7 @@ const formatEntry = ({ client, guestName, date, listPrice, chargedAmount, tipAmo
 // El barbero ve lo suyo; el admin, lo de un barbero (barberId) o lo de toda la barbería.
 const getSummary = async ({ period, date, barberId }, user) => {
   const scopeBarberId = user.role === 'BARBER' ? user.id : barberId;
+  if (user.role !== 'BARBER' && barberId) await ensureBarber(barberId);
   const range = periodRange(period, date);
   const previous = previousRange(period, range);
 

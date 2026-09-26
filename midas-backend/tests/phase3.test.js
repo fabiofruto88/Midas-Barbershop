@@ -1,6 +1,8 @@
 const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { app, prisma, request, loginAdmin, createUserWithRole, cleanup } = require('./helpers');
+const jwt = require('jsonwebtoken');
+const config = require('../src/config/env');
 const { nowInBusinessZone, toDateString, wallClock } = require('../src/utils/time');
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -169,6 +171,16 @@ describe('PATCH /appointments/:id/cancel', () => {
 
     const rebook = await book(request(app), '12:00', guest(7));
     assert.equal(rebook.status, 201);
+  });
+
+  test('el token de invitado dura hasta después de la cita aunque se reserve con mucha antelación', async () => {
+    const date = businessDate(config.bookingWindowDays - 1);
+    const booking = await request(app)
+      .post('/api/v1/appointments')
+      .send({ barberId: barber.user.id, serviceId, date, timeSlot: '10:00', ...guest(20) });
+    assert.equal(booking.status, 201);
+    const { exp } = jwt.decode(booking.body.guestToken);
+    assert.ok(exp * 1000 > wallClock(date, '10:00').getTime(), 'el token caduca antes de la cita');
   });
 
   test('el token de una cita no sirve para otra → 403; sin credenciales → 401', async () => {

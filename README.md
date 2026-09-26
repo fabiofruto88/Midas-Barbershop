@@ -24,6 +24,7 @@ npm install
 cp .env.example .env        # completar DATABASE_URL, JWT_SECRET y ADMIN_*
 npm run prisma:migrate      # crea las tablas
 npm run prisma:seed         # crea el Admin (SEED_DEMO=true añade servicios y barberos demo)
+npm run seed:demo           # opcional: escenario completo de prueba (citas, finanzas, reseñas, galería, tienda)
 npm run dev
 
 # Frontend (http://localhost:5173) — en otra terminal
@@ -33,6 +34,7 @@ npm run dev                 # /api se redirige al backend
 ```
 
 Cuentas demo (con `SEED_DEMO=true`): barberos `carlos@midas.com` y `andres@midas.com`, contraseña `Barbero123`.
+Con `npm run seed:demo` (solo desarrollo, se puede repetir: borra y recrea los datos demo) se añade el barbero `mateo@midas.com` / `Barbero123`, clientes `juan@demo.midas`, `santiago@demo.midas`… / `Cliente123`, ~500 citas de los últimos 45 días y los próximos 14, reseñas, fotos de galería y productos.
 
 ## Pruebas
 
