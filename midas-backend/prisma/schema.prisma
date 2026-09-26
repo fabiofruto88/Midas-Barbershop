@@ -1,0 +1,99 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  BARBER
+  CLIENT
+}
+
+enum AppointmentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id                String   @id @default(uuid())
+  role              Role     @default(CLIENT)
+  name              String
+  email             String?  @unique // Opcional para invitados que luego se registran
+  passwordHash      String?
+  phone             String?
+  pushSubscription  Json?    // Almacena el token de Web Push
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relaciones
+  barberAvailability BarberAvailability[]
+  appointmentsAsBarber Appointment[] @relation("BarberAppointments")
+  appointmentsAsClient Appointment[] @relation("ClientAppointments")
+}
+
+model Service {
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+  price           Decimal  @db.Decimal(10, 2)
+  durationMinutes Int      @default(60) // Fijo a 1 hora según reglas de negocio
+  isActive        Boolean  @default(true)
+
+  appointments    Appointment[]
+}
+
+model BarberAvailability {
+  id          String   @id @default(uuid())
+  barberId    String
+  dayOfWeek   Int      // 1 = Lunes, 7 = Domingo
+  startTime   String   // Formato "HH:mm" (ej. "10:00")
+  endTime     String   // Formato "HH:mm" (ej. "20:00")
+
+  barber      User     @relation(fields: [barberId], references: [id])
+
+  @@unique([barberId, dayOfWeek]) // Un barbero solo tiene un horario base por día
+}
+
+model Appointment {
+  id              String            @id @default(uuid())
+  barberId        String
+  clientId        String?           // Null si es guest (invitado)
+  serviceId       String
+
+  // Datos Guest (si clientId es null)
+  guestName       String?
+  guestPhone      String?
+  guestEmail      String?
+
+  date            DateTime          @db.Date // "YYYY-MM-DD"
+  timeSlot        String            // "HH:mm" (ej. "14:00")
+  status          AppointmentStatus @default(PENDING)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relaciones
+  barber          User              @relation("BarberAppointments", fields: [barberId], references: [id])
+  client          User?             @relation("ClientAppointments", fields: [clientId], references: [id])
+  service         Service           @relation(fields: [serviceId], references: [id])
+  result          ServiceResult?
+
+  // Índice compuesto para evitar concurrencia (Race conditions)
+  @@unique([barberId, date, timeSlot])
+}
+
+model ServiceResult {
+  id              String      @id @default(uuid())
+  appointmentId   String      @unique
+  imageUrl        String      // URL segura de Cloudinary
+  notes           String?     // Opcional, por si el barbero quiere dejar un comentario técnico
+  createdAt       DateTime    @default(now())
+
+  appointment     Appointment @relation(fields: [appointmentId], references: [id])
+}

@@ -1,0 +1,55 @@
+# Blueprint de Render: API de Midas + PostgreSQL.
+# Render → New → Blueprint → seleccionar este repositorio.
+# Tras el primer despliegue: completar CORS_ORIGIN, credenciales de Cloudinary y VAPID en el panel,
+# y ejecutar el seed desde la Shell del servicio: npm run prisma:seed
+databases:
+  - name: midas-db
+    plan: free
+    databaseName: midas_db
+
+services:
+  - type: web
+    name: midas-api
+    runtime: node
+    plan: free
+    rootDir: midas-backend
+    buildCommand: npm ci
+    # Aplica las migraciones pendientes antes de arrancar.
+    startCommand: npm run prisma:deploy && npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: midas-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Proxies delante del API: Vercel (rewrite /api) + balanceador de Render = 2.
+      # Si el frontend llama al API directamente (sin rewrite de Vercel), usar "1".
+      - key: TRUST_PROXY
+        value: "2"
+      - key: BUSINESS_TIMEZONE
+        value: America/Bogota
+      # URL pública del frontend (ej. https://midas.vercel.app).
+      - key: CORS_ORIGIN
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: mailto:admin@midas.com

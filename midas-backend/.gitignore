@@ -1,0 +1,3 @@
+node_modules
+# Mantener las variables de entorno fuera del control de versiones
+.env

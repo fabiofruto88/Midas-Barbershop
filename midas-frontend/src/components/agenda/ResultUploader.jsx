@@ -1,0 +1,68 @@
+import { useEffect, useId, useMemo, useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import { appointmentsApi } from '../../services/midas'
+import Alert from '../ui/Alert'
+import Button from '../ui/Button'
+
+const MAX_BYTES = 5 * 1024 * 1024
+const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp']
+
+// Selección, vista previa y subida de la foto del resultado.
+// La validación aquí es solo de UX: el backend verifica el tipo real por magic numbers.
+export default function ResultUploader({ appointmentId, onUploaded, onCancel }) {
+  const inputId = useId()
+  const [file, setFile] = useState(null)
+  const [notes, setNotes] = useState('')
+  const [error, setError] = useState(null)
+  // URL temporal de la vista previa; se libera al cambiar de archivo o desmontar.
+  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file])
+  useEffect(() => () => preview && URL.revokeObjectURL(preview), [preview])
+
+  const upload = useMutation({
+    mutationFn: () => appointmentsApi.uploadResult(appointmentId, { file, notes }),
+    onSuccess: onUploaded,
+  })
+
+  const choose = (event) => {
+    const selected = event.target.files?.[0]
+    setError(null)
+    if (!selected) return setFile(null)
+    if (!ACCEPTED.includes(selected.type)) return setError('Solo se permiten imágenes JPEG, PNG o WebP.')
+    if (selected.size > MAX_BYTES) return setError('La imagen no puede superar los 5MB.')
+    setFile(selected)
+  }
+
+  return (
+    <div className="space-y-3 rounded-control border border-border bg-surface-2 p-4">
+      <label htmlFor={inputId} className="block text-sm font-medium">
+        Foto del resultado
+      </label>
+      <input
+        id={inputId}
+        type="file"
+        accept={ACCEPTED.join(',')}
+        onChange={choose}
+        className="block w-full text-sm text-muted file:mr-3 file:rounded-control file:border-0 file:bg-surface file:px-3 file:py-2 file:text-sm file:text-text"
+      />
+      {preview && <img src={preview} alt="Vista previa" className="aspect-square w-40 rounded-control object-cover" />}
+      <textarea
+        value={notes}
+        onChange={(event) => setNotes(event.target.value)}
+        maxLength={500}
+        rows={2}
+        placeholder="Notas técnicas (opcional)"
+        aria-label="Notas técnicas"
+        className="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm placeholder:text-muted/60 focus:border-brand focus:outline-none"
+      />
+      <Alert tone="error">{error ?? upload.error?.message}</Alert>
+      <div className="flex gap-2">
+        <Button onClick={() => upload.mutate()} disabled={!file} loading={upload.isPending}>
+          Subir foto
+        </Button>
+        <Button variant="ghost" onClick={onCancel}>
+          Cancelar
+        </Button>
+      </div>
+    </div>
+  )
+}

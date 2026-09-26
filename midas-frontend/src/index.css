@@ -1,0 +1,112 @@
+@import "tailwindcss";
+@import "@fontsource/montserrat/300.css";
+@import "@fontsource/montserrat/400.css";
+@import "@fontsource/montserrat/400-italic.css";
+@import "@fontsource/montserrat/500.css";
+@import "@fontsource/montserrat/600.css";
+@import "@fontsource/montserrat/700.css";
+@import "@fontsource/playfair-display/500.css";
+@import "@fontsource/playfair-display/600.css";
+@import "@fontsource/playfair-display/600-italic.css";
+@import "@fontsource/playfair-display/700.css";
+
+/*
+ * Design tokens de Midas (fuente: Figma "diseño-midas", pantalla principal).
+ * Todo el color/tipografía/radio de la app sale de aquí.
+ */
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+
+  --color-bg: #0e0e10;
+  --color-bg-alt: #131315;
+  --color-surface: #1b1b1d;
+  --color-card: #201f21;
+  --color-surface-2: #2a2a2c;
+  --color-line: #4d4635;
+  --color-border: rgb(77 70 53 / 0.4);
+  --color-text: #e5e1e4;
+  --color-text-soft: #d0c5af;
+  --color-muted: #99907c;
+
+  --color-brand: #f2ca50;
+  --color-brand-soft: #e1c46e;
+  --color-brand-strong: #f5d77f;
+  --color-brand-deep: #aa771c;
+  --color-on-brand: #0e0e10;
+
+  --color-rose: #ffd9e0;
+  --color-success: #10b981;
+  --color-danger: #f87171;
+
+  /* El diseño es de esquinas rectas. */
+  --radius-card: 0;
+  --radius-control: 0;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Degradado dorado de los botones principales. */
+@utility bg-gold {
+  background-image: linear-gradient(to right, #f5d77f, #f2ca50, #aa771c);
+}
+
+/* Variante del botón de cabecera (centro #d4af37). */
+@utility bg-gold-deep {
+  background-image: linear-gradient(to right, #f5d77f, #d4af37, #aa771c);
+}
+
+/* Titulares con brillo dorado. */
+@utility text-gold {
+  background-image: linear-gradient(to right, #fff5d0, #f2ca50, #b88728);
+  background-clip: text;
+  color: transparent;
+}
+
+/* Feedback de pulsación en elementos presionables. */
+@utility pressable {
+  transition-property: transform, background-color, border-color, color, box-shadow, filter;
+  transition-duration: 160ms;
+  transition-timing-function: var(--ease-out);
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+/* Amplía el área clicable de enlaces pequeños (mín. 24px, WCAG 2.5.8) sin cambiar su aspecto. */
+@utility hit-area {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -6px -4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-bg text-text font-sans antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand;
+  }
+  /* El header fijo no debe tapar el destino de los anclajes. */
+  [id] {
+    scroll-margin-top: 96px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
