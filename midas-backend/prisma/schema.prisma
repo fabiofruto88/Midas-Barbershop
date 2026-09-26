@@ -23,6 +23,12 @@ enum AppointmentStatus {
   CANCELLED
 }
 
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+}
+
 model User {
   id                String   @id @default(uuid())
   role              Role     @default(CLIENT)
@@ -79,6 +85,15 @@ model Appointment {
   date            DateTime          @db.Date // "YYYY-MM-DD"
   timeSlot        String            // "HH:mm" (ej. "14:00")
   status          AppointmentStatus @default(PENDING)
+
+  // Finanzas: el precio del servicio es la referencia, pero el barbero puede cobrar más o menos.
+  listPrice       Decimal           @db.Decimal(10, 2)  // Precio del servicio congelado al reservar
+  chargedAmount   Decimal?          @db.Decimal(10, 2)  // Lo cobrado de verdad (se fija al completar)
+  tipAmount       Decimal           @default(0) @db.Decimal(10, 2) // Propina, aparte del servicio
+  paymentMethod   PaymentMethod?
+  priceNote       String?           // Motivo cuando lo cobrado difiere del precio de lista
+  completedAt     DateTime?
+
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
@@ -91,6 +106,7 @@ model Appointment {
 
   // Índice compuesto para evitar concurrencia (Race conditions)
   @@unique([barberId, date, timeSlot])
+  @@index([barberId, status, date]) // Resúmenes de finanzas
 }
 
 model ServiceResult {

@@ -85,6 +85,8 @@ describe('POST /appointments', () => {
     assert.equal(res.body.status, 'PENDING');
     assert.ok(res.body.clientId);
     assert.equal(res.body.guestToken, undefined);
+    // El precio del servicio queda congelado en la cita.
+    assert.equal(Number(res.body.listPrice), 30000);
 
     const availability = await request(app).get(
       `/api/v1/appointments/availability?barberId=${barber.user.id}&date=${FUTURE}`
@@ -206,7 +208,7 @@ describe('PATCH /appointments/:id/cancel', () => {
       const timeSlot = `${String(soon.getUTCHours()).padStart(2, '0')}:00`;
       const me = await client.get('/api/v1/auth/me');
       const appointment = await prisma.appointment.create({
-        data: { barberId: barber.user.id, serviceId, clientId: me.body.id, date: wallClock(date), timeSlot },
+        data: { barberId: barber.user.id, serviceId, listPrice: 20000, clientId: me.body.id, date: wallClock(date), timeSlot },
       });
       soonId = appointment.id;
     });

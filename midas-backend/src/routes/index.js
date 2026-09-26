@@ -7,6 +7,7 @@ const appointmentRoutes = require('./appointment.routes');
 const notificationRoutes = require('./notification.routes');
 const resultRoutes = require('./result.routes');
 const reviewRoutes = require('./review.routes');
+const financeRoutes = require('./finance.routes');
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/appointments', appointmentRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/results', resultRoutes);
 router.use('/reviews', reviewRoutes);
+router.use('/finance', financeRoutes);
 
 module.exports = router;

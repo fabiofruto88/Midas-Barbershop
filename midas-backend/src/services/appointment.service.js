@@ -71,7 +71,7 @@ const createAppointment = async (input, user) => {
     throw new AppError('Para reservar sin cuenta debes indicar guestName y guestPhone.', 400);
   }
 
-  await getServiceById(serviceId, { includeInactive: false });
+  const service = await getServiceById(serviceId, { includeInactive: false });
 
   const now = nowInBusinessZone();
   if (isTooSoon(date, timeSlot, now)) {
@@ -117,7 +117,8 @@ const createAppointment = async (input, user) => {
         });
 
         return tx.appointment.create({
-          data: { barberId, serviceId, date: wallClock(date), timeSlot, ...owner },
+          // listPrice congela el precio: si el admin lo cambia después, el histórico no varía.
+          data: { barberId, serviceId, listPrice: service.price, date: wallClock(date), timeSlot, ...owner },
         });
       },
       // Picos de reservas simultáneas: más margen para obtener conexión; la transacción en sí es corta.
@@ -217,6 +218,11 @@ const getAgenda = async ({ date, barberId }, user) => {
       guestName: true,
       guestPhone: true,
       guestEmail: true,
+      listPrice: true,
+      chargedAmount: true,
+      tipAmount: true,
+      paymentMethod: true,
+      priceNote: true,
       service: { select: { id: true, name: true, price: true } },
       barber: { select: { id: true, name: true } },
       client: { select: { id: true, name: true, phone: true, email: true } },
@@ -237,18 +243,33 @@ const findManagedAppointment = async (id, user) => {
 
 const hasStarted = (appointment) => hoursUntil(toDateString(appointment.date), appointment.timeSlot) <= 0;
 
-// PATCH /appointments/:id/complete
-const completeAppointment = async (id, user) => {
+// PATCH /appointments/:id/complete: cierra la cita registrando lo cobrado.
+// Sin importe se cobra el precio de lista; el barbero puede cobrar más o menos (priceNote explica por qué).
+const completeAppointment = async (id, user, charge = {}) => {
   const appointment = await findManagedAppointment(id, user);
   if (appointment.status !== 'PENDING') throw new AppError('Solo se pueden completar citas pendientes.', 400);
   if (!hasStarted(appointment)) throw new AppError('No puedes completar una cita que aún no ha comenzado.', 400);
 
-  const { count } = await prisma.appointment.updateMany({
-    where: { id, status: 'PENDING' },
-    data: { status: 'COMPLETED' },
-  });
+  const data = {
+    status: 'COMPLETED',
+    completedAt: new Date(),
+    chargedAmount: charge.chargedAmount ?? appointment.listPrice,
+    tipAmount: charge.tipAmount ?? 0,
+    paymentMethod: charge.paymentMethod ?? null,
+    priceNote: charge.priceNote ?? null,
+  };
+  const { count } = await prisma.appointment.updateMany({ where: { id, status: 'PENDING' }, data });
   if (count === 0) throw new AppError('Solo se pueden completar citas pendientes.', 400);
-  return formatAppointment({ ...appointment, status: 'COMPLETED' });
+  return formatAppointment({ ...appointment, ...data });
+};
+
+// PATCH /appointments/:id/charge: corrige el cobro de una cita ya completada.
+const updateCharge = async (id, user, charge) => {
+  const appointment = await findManagedAppointment(id, user);
+  if (appointment.status !== 'COMPLETED') throw new AppError('Solo se puede corregir el cobro de citas completadas.', 400);
+
+  const updated = await prisma.appointment.update({ where: { id }, data: charge });
+  return formatAppointment(updated);
 };
 
 module.exports = {
@@ -258,6 +279,7 @@ module.exports = {
   listMyAppointments,
   getAgenda,
   completeAppointment,
+  updateCharge,
   findManagedAppointment,
   hasStarted,
 };

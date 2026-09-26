@@ -12,6 +12,7 @@ import GuestCancelPage from '../pages/GuestCancelPage'
 import AgendaPage from '../pages/AgendaPage'
 import SchedulePage from '../pages/SchedulePage'
 import ServiceHistoryPage from '../pages/ServiceHistoryPage'
+import FinancePage from '../pages/FinancePage'
 import AdminLayout from '../pages/admin/AdminLayout'
 import ServicesAdminPage from '../pages/admin/ServicesAdminPage'
 import TeamAdminPage from '../pages/admin/TeamAdminPage'
@@ -41,7 +42,10 @@ const router = createBrowserRouter([
       },
       {
         element: <RequireAuth roles={['BARBER', 'ADMIN']} />,
-        children: [{ path: 'agenda', element: <AgendaPage /> }],
+        children: [
+          { path: 'agenda', element: <AgendaPage /> },
+          { path: 'agenda/finanzas', element: <FinancePage /> },
+        ],
       },
       {
         element: <RequireAuth roles={['BARBER']} />,

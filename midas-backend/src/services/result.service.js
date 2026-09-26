@@ -20,9 +20,12 @@ const uploadResult = async (appointmentId, user, { buffer, notes }) => {
   let result;
   try {
     result = await prisma.$transaction(async (tx) => {
-      // Subir el resultado da la cita por completada.
+      // Subir el resultado da la cita por completada (cobrada al precio de lista).
       if (appointment.status === 'PENDING') {
-        await tx.appointment.update({ where: { id: appointmentId }, data: { status: 'COMPLETED' } });
+        await tx.appointment.update({
+          where: { id: appointmentId },
+          data: { status: 'COMPLETED', completedAt: new Date(), chargedAmount: appointment.listPrice },
+        });
       }
       return tx.serviceResult.upsert({
         where: { appointmentId },

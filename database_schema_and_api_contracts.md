@@ -86,6 +86,15 @@ model Appointment {
   date            DateTime          @db.Date // "YYYY-MM-DD"
   timeSlot        String            // "HH:mm" (ej. "14:00")
   status          AppointmentStatus @default(PENDING)
+
+  // Finanzas: el precio del servicio es la referencia, pero el barbero puede cobrar más o menos.
+  listPrice       Decimal           @db.Decimal(10, 2)  // Precio del servicio congelado al reservar
+  chargedAmount   Decimal?          @db.Decimal(10, 2)  // Lo cobrado de verdad (se fija al completar)
+  tipAmount       Decimal           @default(0) @db.Decimal(10, 2) // Propina, aparte del servicio
+  paymentMethod   PaymentMethod?    // CASH | CARD | TRANSFER
+  priceNote       String?           // Motivo cuando lo cobrado difiere del precio de lista
+  completedAt     DateTime?
+
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
@@ -97,6 +106,7 @@ model Appointment {
 
   // Índice compuesto para evitar concurrencia (Race conditions)
   @@unique([barberId, date, timeSlot]) 
+  @@index([barberId, status, date]) // Resúmenes de finanzas
 }
 
 model ServiceResult {
@@ -193,6 +203,52 @@ Obtiene el historial de citas del usuario actual (Requiere Auth).
       }
     ]
     ```
+
+#### `PATCH /appointments/:id/complete` (Barbero asignado / Admin)
+Cierra una cita ya iniciada registrando lo cobrado. Todo el body es opcional: sin `chargedAmount` se cobra el `listPrice`.
+*   **Request Body:**
+    ```json
+    { "chargedAmount": 30000, "tipAmount": 3000, "paymentMethod": "CARD", "priceNote": "Diseño en la nuca" }
+    ```
+*   **Validación:** importes ≥ 0 con máximo 2 decimales; `paymentMethod` ∈ `CASH | CARD | TRANSFER` (o `null`); `priceNote` ≤ 200 caracteres.
+*   **Response (200 OK):** la cita con `status: "COMPLETED"` y los datos de cobro.
+
+#### `PATCH /appointments/:id/charge` (Barbero asignado / Admin)
+Corrige el cobro de una cita **ya completada** (mismos campos que `complete`, al menos uno; `null` borra `paymentMethod`/`priceNote`).
+*   **Error (400):** la cita no está completada o el body está vacío.
+
+---
+
+### 2.2.1 Finanzas (`/finance`)
+
+#### `GET /finance/summary` (Barbero / Admin)
+Lo generado en el día, la semana (lunes a domingo) o el mes que contiene `date`. Solo cuenta citas `COMPLETED`; importes en pesos (número).
+El barbero siempre ve lo suyo; el admin puede pasar `barberId` (sin él, toda la barbería).
+*   **Query Params:** `?period=day|week|month&date=2026-09-26[&barberId=UUID]`
+*   **Response (200 OK):**
+    ```json
+    {
+      "period": "week",
+      "date": "2026-09-26",
+      "range": { "from": "2026-09-21", "to": "2026-09-27" },
+      "barberId": "UUID",
+      "totals": {
+        "services": 7, "revenue": 225000, "tips": 10000, "total": 235000, "averageTicket": 32143,
+        "listRevenue": 220000, "adjustment": 5000, "adjustedUp": 2, "adjustedDown": 1
+      },
+      "previous": { "range": { "from": "2026-09-14", "to": "2026-09-20" }, "services": 1, "total": 25000,
+                    "change": { "services": 600, "total": 840 } },
+      "byService": [{ "serviceId": "UUID", "name": "Corte + Barba", "count": 3, "revenue": 125000, "tips": 5000, "averagePrice": 41667 }],
+      "byPaymentMethod": [{ "method": "CASH", "count": 3, "amount": 92000 }],
+      "series": [{ "key": "2026-09-21", "services": 0, "revenue": 0, "tips": 0, "total": 0 }],
+      "cancelled": 0,
+      "upcoming": { "count": 2, "expected": 50000 },
+      "entries": [{ "id": "UUID", "date": "2026-09-26", "timeSlot": "10:00", "service": { "id": "UUID", "name": "Corte" },
+                    "barber": { "id": "UUID", "name": "Carlos" }, "clientName": "Juan", "listPrice": 25000,
+                    "chargedAmount": 30000, "tipAmount": 3000, "paymentMethod": "CARD", "priceNote": "Diseño en la nuca" }]
+    }
+    ```
+*   `series`: por hora (`key` = `"HH:mm"`) en `day`; por día (`key` = `"YYYY-MM-DD"`) en `week`/`month`. `change` es `null` si el periodo anterior no tiene datos. `byPaymentMethod.amount` incluye propinas; `method` es `UNSPECIFIED` si no se indicó.
 
 ---
 

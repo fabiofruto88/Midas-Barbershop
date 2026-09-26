@@ -31,7 +31,7 @@ let serviceId;
 
 const createAppointment = ({ date, timeSlot }, barberId = barber.user.id, extra = {}) =>
   prisma.appointment.create({
-    data: { barberId, serviceId, clientId, date: wallClock(date), timeSlot, ...extra },
+    data: { barberId, serviceId, listPrice: 20000, clientId, date: wallClock(date), timeSlot, ...extra },
   });
 
 before(async () => {
@@ -137,6 +137,9 @@ describe('POST /appointments/:id/results', () => {
     const stored = await prisma.appointment.findUnique({ where: { id: appointment.id }, include: { result: true } });
     assert.equal(stored.status, 'COMPLETED');
     assert.equal(stored.result.imageUrl, res.body.imageUrl);
+    // Completada por la foto: se da por cobrada al precio de lista.
+    assert.equal(Number(stored.chargedAmount), 20000);
+    assert.ok(stored.completedAt);
 
     // El cliente la ve en su historial.
     const history = await client.get('/api/v1/appointments/me');

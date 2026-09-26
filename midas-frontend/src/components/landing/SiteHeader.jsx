@@ -17,9 +17,11 @@ const roleLinks = {
     { to: "/agenda", label: "Agenda" },
     { to: "/agenda/historial", label: "Historial" },
     { to: "/agenda/horario", label: "Mi horario" },
+    { to: "/agenda/finanzas", label: "Finanzas" },
   ],
   ADMIN: [
     { to: "/agenda", label: "Agenda" },
+    { to: "/agenda/finanzas", label: "Finanzas" },
     { to: "/admin", label: "Administración" },
   ],
 };

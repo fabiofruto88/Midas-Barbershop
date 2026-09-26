@@ -10,6 +10,8 @@ const {
   createAppointmentBody,
   agendaQuery,
   resultBody,
+  completeBody,
+  chargeBody,
   appointmentIdParam,
 } = require('../schemas/appointment.schema');
 const { reviewBody } = require('../schemas/review.schema');
@@ -28,8 +30,15 @@ router.patch(
   '/:id/complete',
   authenticate,
   authorize('BARBER', 'ADMIN'),
-  validate({ params: appointmentIdParam }),
+  validate({ params: appointmentIdParam, body: completeBody }),
   controller.complete
+);
+router.patch(
+  '/:id/charge',
+  authenticate,
+  authorize('BARBER', 'ADMIN'),
+  validate({ params: appointmentIdParam, body: chargeBody }),
+  controller.updateCharge
 );
 
 // Foto del resultado: solo barberos (multipart/form-data, campo "image").

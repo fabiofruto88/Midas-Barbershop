@@ -8,6 +8,8 @@ import { queryKeys } from '../lib/queryClient'
 import { optimizedImageUrl } from '../lib/images'
 import { formatLongDate, formatPrice, formatTime, hoursUntil, parseDate, toDateString } from '../lib/format'
 import ResultUploader from '../components/agenda/ResultUploader'
+import ChargeForm from '../components/agenda/ChargeForm'
+import { paymentLabel } from '../lib/payments'
 import StatusBadge from '../components/StatusBadge'
 import PushToggle from '../components/PushToggle'
 import Alert from '../components/ui/Alert'
@@ -56,7 +58,15 @@ export default function AgendaPage() {
             <Button to="/agenda/horario" variant="secondary">
               Mi horario
             </Button>
+            <Button to="/agenda/finanzas" variant="secondary">
+              Finanzas
+            </Button>
           </div>
+        )}
+        {isAdmin && (
+          <Button to="/agenda/finanzas" variant="secondary">
+            Finanzas
+          </Button>
         )}
       </header>
 
@@ -118,17 +128,20 @@ export default function AgendaPage() {
 function AgendaItem({ appointment, showBarber, canUpload }) {
   const queryClient = useQueryClient()
   const [uploading, setUploading] = useState(false)
+  const [closing, setClosing] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['appointments'] })
     queryClient.invalidateQueries({ queryKey: ['availability'] })
+    queryClient.invalidateQueries({ queryKey: ['finance'] })
   }
 
   const complete = useMutation({
-    mutationFn: () => appointmentsApi.complete(appointment.id),
+    mutationFn: (charge) => appointmentsApi.complete(appointment.id, charge),
     onSuccess: () => {
-      toast.success('Cita marcada como completada')
+      toast.success('Servicio cerrado', { description: 'El cobro ya cuenta en tus finanzas.' })
+      setClosing(false)
       refresh()
     },
   })
@@ -148,7 +161,10 @@ function AgendaItem({ appointment, showBarber, canUpload }) {
   const isGuest = !appointment.client
   const started = hoursUntil(appointment.date, appointment.timeSlot) <= 0
   const isPending = appointment.status === 'PENDING'
-  const actionError = complete.error ?? cancel.error
+  const listPrice = appointment.listPrice ?? appointment.service.price
+  const isCompleted = appointment.status === 'COMPLETED'
+  const charged = Number(appointment.chargedAmount ?? listPrice)
+  const tip = Number(appointment.tipAmount ?? 0)
 
   return (
     <Card className={`space-y-4 ${appointment.status === 'CANCELLED' ? 'opacity-60' : ''}`}>
@@ -160,7 +176,7 @@ function AgendaItem({ appointment, showBarber, canUpload }) {
             {isGuest && <span className="ml-2 text-xs font-normal text-muted">(invitado)</span>}
           </p>
           <p className="text-sm text-muted">
-            {appointment.service.name} · {formatPrice(appointment.service.price)}
+            {appointment.service.name} · {formatPrice(listPrice)}
             {showBarber && ` · con ${appointment.barber.name}`}
           </p>
           {customer.phone && (
@@ -184,9 +200,34 @@ function AgendaItem({ appointment, showBarber, canUpload }) {
         </div>
       )}
 
-      <Alert tone="error">{actionError?.message}</Alert>
+      {isCompleted && (
+        <p className="text-sm text-text-soft">
+          Cobrado: <span className="font-semibold text-text">{formatPrice(charged)}</span>
+          {charged !== Number(listPrice) && (
+            <span className="text-muted"> ({charged > Number(listPrice) ? 'más' : 'menos'} que el precio fijo)</span>
+          )}
+          {tip > 0 && ` · Propina ${formatPrice(tip)}`}
+          {appointment.paymentMethod && ` · ${paymentLabel(appointment.paymentMethod)}`}
+          {appointment.priceNote && <span className="block text-muted">Motivo: {appointment.priceNote}</span>}
+        </p>
+      )}
 
-      {uploading ? (
+      <Alert tone="error">{cancel.error?.message}</Alert>
+
+      {closing ? (
+        <ChargeForm
+          listPrice={listPrice}
+          title="Cerrar servicio"
+          submitLabel="Completar y registrar cobro"
+          loading={complete.isPending}
+          error={complete.error}
+          onSubmit={(charge) => complete.mutate(charge)}
+          onCancel={() => {
+            complete.reset()
+            setClosing(false)
+          }}
+        />
+      ) : uploading ? (
         <ResultUploader
           appointmentId={appointment.id}
           onCancel={() => setUploading(false)}
@@ -198,7 +239,7 @@ function AgendaItem({ appointment, showBarber, canUpload }) {
       ) : (
         <div className="flex flex-wrap gap-2">
           {isPending && started && (
-            <Button variant="secondary" loading={complete.isPending} onClick={() => complete.mutate()}>
+            <Button variant="secondary" onClick={() => setClosing(true)}>
               Marcar completada
             </Button>
           )}

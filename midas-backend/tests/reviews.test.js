@@ -29,7 +29,7 @@ const createAppointment = (status = 'COMPLETED', owner = clientId) => {
   day += 1;
   const date = new Date(Date.UTC(2025, 0, day));
   return prisma.appointment.create({
-    data: { barberId: barber.user.id, serviceId, clientId: owner, date: wallClock(date.toISOString().slice(0, 10)), timeSlot: '10:00', status },
+    data: { barberId: barber.user.id, serviceId, listPrice: 20000, clientId: owner, date: wallClock(date.toISOString().slice(0, 10)), timeSlot: '10:00', status },
   });
 };
 

@@ -69,11 +69,17 @@ export const appointmentsApi = {
     }),
   mine: () => api('/appointments/me'),
   agenda: ({ date, barberId }) => api(`/appointments/agenda${query({ date, barberId })}`),
-  complete: (id) => api(`/appointments/${id}/complete`, { method: 'PATCH' }),
+  // charge: { chargedAmount, tipAmount, paymentMethod, priceNote } (todo opcional).
+  complete: (id, charge) => api(`/appointments/${id}/complete`, { method: 'PATCH', body: charge }),
+  updateCharge: (id, charge) => api(`/appointments/${id}/charge`, { method: 'PATCH', body: charge }),
   review: (id, { rating, comment }) => api(`/appointments/${id}/review`, { method: 'PUT', body: { rating, comment } }),
   uploadResult: (id, { file, notes }) => {
     const form = imageForm(file)
     if (notes?.trim()) form.append('notes', notes.trim())
     return api(`/appointments/${id}/results`, { method: 'POST', body: form })
   },
+}
+
+export const financeApi = {
+  summary: ({ period, date, barberId }) => api(`/finance/summary${query({ period, date, barberId })}`),
 }

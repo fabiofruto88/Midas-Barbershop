@@ -28,7 +28,13 @@ const getAgenda = async (req, res) => {
 };
 
 const complete = async (req, res) => {
-  res.status(200).json(await appointmentService.completeAppointment(req.validated.params.id, req.user));
+  res
+    .status(200)
+    .json(await appointmentService.completeAppointment(req.validated.params.id, req.user, req.validated.body));
+};
+
+const updateCharge = async (req, res) => {
+  res.status(200).json(await appointmentService.updateCharge(req.validated.params.id, req.user, req.validated.body));
 };
 
 const uploadResult = async (req, res) => {
@@ -39,4 +45,4 @@ const uploadResult = async (req, res) => {
   res.status(201).json(result);
 };
 
-module.exports = { getAvailability, create, cancel, listMine, getAgenda, complete, uploadResult };
+module.exports = { getAvailability, create, cancel, listMine, getAgenda, complete, updateCharge, uploadResult };

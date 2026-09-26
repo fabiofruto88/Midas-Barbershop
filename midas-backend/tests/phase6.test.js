@@ -91,7 +91,7 @@ describe('Recordatorio 15 minutos antes', () => {
     await barber.client.post('/api/v1/notifications/subscribe').send(subscription('barbero'));
 
     const date = '2030-01-07';
-    const base = { barberId: barber.user.id, serviceId, date: wallClock(date) };
+    const base = { barberId: barber.user.id, serviceId, listPrice: 20000, date: wallClock(date) };
     await prisma.appointment.createMany({
       data: [
         { ...base, timeSlot: '14:00', clientId },
@@ -120,7 +120,7 @@ describe('Recordatorio 15 minutos antes', () => {
     await client.post('/api/v1/notifications/subscribe').send(subscription('expired'));
     const date = '2030-01-08';
     await prisma.appointment.create({
-      data: { barberId: barber.user.id, serviceId, clientId, date: wallClock(date), timeSlot: '10:00' },
+      data: { barberId: barber.user.id, serviceId, listPrice: 20000, clientId, date: wallClock(date), timeSlot: '10:00' },
     });
 
     await sendReminders(new Date(`${date}T09:45:00Z`));
