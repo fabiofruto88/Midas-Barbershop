@@ -212,6 +212,48 @@ describe('POST /appointments/:id/results', () => {
   });
 });
 
+describe('Galería de resultados (/results)', () => {
+  const upload = (id) => barber.client.post(`/api/v1/appointments/${id}/results`).attach('image', PNG, 'corte.png');
+
+  test('una foto nueva no es pública hasta que el admin la publica', async () => {
+    const appointment = await createAppointment(slotAt(-12));
+    const uploaded = await upload(appointment.id);
+    assert.equal(uploaded.body.isPublished, false);
+
+    const before = await barber.client.get('/api/v1/results/public');
+    assert.equal(before.status, 200);
+    assert.ok(!before.body.some((item) => item.id === uploaded.body.id));
+
+    const pending = await admin.get('/api/v1/results?isPublished=false');
+    assert.ok(pending.body.some((item) => item.id === uploaded.body.id));
+
+    const published = await admin.patch(`/api/v1/results/${uploaded.body.id}`).send({ isPublished: true });
+    assert.equal(published.status, 200);
+    assert.equal(published.body.isPublished, true);
+
+    const after = await barber.client.get('/api/v1/results/public');
+    const item = after.body.find((entry) => entry.id === uploaded.body.id);
+    assert.equal(item.appointment.service.name, 'TEST Fotos');
+    assert.equal(item.appointment.barber.name, barber.user.name);
+    // La galería pública no expone datos del cliente ni notas técnicas.
+    assert.equal(item.notes, undefined);
+    assert.equal(item.appointment.client, undefined);
+
+    // Cambiar la foto la devuelve a revisión.
+    const replaced = await upload(appointment.id);
+    assert.equal(replaced.body.isPublished, false);
+  });
+
+  test('solo el admin modera: barbero → 403, sin sesión → 401, id inexistente → 404', async () => {
+    const appointment = await createAppointment(slotAt(-13));
+    const { body } = await upload(appointment.id);
+    assert.equal((await barber.client.patch(`/api/v1/results/${body.id}`).send({ isPublished: true })).status, 403);
+    assert.equal((await barber.client.get('/api/v1/results')).status, 403);
+    const missing = await admin.patch('/api/v1/results/00000000-0000-4000-8000-000000000000').send({ isPublished: true });
+    assert.equal(missing.status, 404);
+  });
+});
+
 test('publicIdFromUrl extrae el id de Cloudinary', () => {
   assert.equal(
     storage.publicIdFromUrl('https://res.cloudinary.com/midas/image/upload/v1234/midas/results/abc-123.jpg'),

@@ -66,13 +66,13 @@ export default function HeroSection() {
                 <Icon src={iconArrow} className="size-3" />
               </Button>
               <Button
-                href="#experiencia"
+                href="#servicios"
                 variant="outline"
                 size="lgFlush"
                 className="justify-start gap-14 py-4 pr-20 pl-8 tracking-[0.2em]"
               >
                 <Icon src={iconDiamond} className="h-[13.5px] w-[15px]" />
-                <span className="w-[120px] text-center">Explorar experiencia</span>
+                <span className="w-[120px] text-center">Ver servicios</span>
               </Button>
             </motion.div>
 

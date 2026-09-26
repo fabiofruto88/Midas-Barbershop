@@ -17,6 +17,9 @@ export default function AdminLayout() {
           <NavLink to="/admin/equipo" className={tabClass}>
             Equipo
           </NavLink>
+          <NavLink to="/admin/galeria" className={tabClass}>
+            Galería
+          </NavLink>
         </nav>
       </header>
       <Outlet />

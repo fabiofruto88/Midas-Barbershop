@@ -101,10 +101,9 @@ export default function SiteFooter() {
               damasquina y rituales de bienestar bajo los más altos estándares de la realeza moderna.
             </p>
             <div className="flex flex-col gap-1 border border-brand/20 bg-surface p-4">
-              <p className="text-[9px] leading-3 font-bold tracking-[0.1em] text-brand uppercase">Club privado VIP</p>
+              <p className="text-[9px] leading-3 font-bold tracking-[0.1em] text-brand uppercase">Reserva en línea</p>
               <p className={`text-text-soft ${body}`}>
-                Acceso exclusivo a bar privado de cognac, habanos selectos y salón de corte confidencial para miembros
-                Gold &amp; Sovereign.
+                Elige tu barbero, el servicio y la hora en minutos, sin llamadas ni filas.
               </p>
             </div>
           </div>
@@ -130,7 +129,14 @@ export default function SiteFooter() {
             <address className={`flex flex-col gap-1 not-italic ${body}`}>
               <span className="font-medium text-text">{contact.address}</span>
               <span className="text-muted">{contact.city}</span>
-              <span className="pt-1 text-brand">Valet Parking Privado &amp; Helipad Concierge</span>
+              <a
+                href={contact.mapHref}
+                target="_blank"
+                rel="noreferrer"
+                className="self-start pt-1 text-brand transition-colors hover:text-brand-strong"
+              >
+                Ver en Google Maps<span className="sr-only"> (se abre en una pestaña nueva)</span>
+              </a>
             </address>
             <p className="flex flex-col gap-1 pt-2">
               <span className="text-[9px] leading-3 font-bold tracking-[0.1em] text-muted uppercase">
@@ -178,10 +184,10 @@ export default function SiteFooter() {
           </p>
           <ul className="flex flex-wrap gap-6 tracking-[0.05em]">
             <li>Privacidad</li>
-            <li>Términos del club</li>
+            <li>Términos</li>
             <li>
-              <a href="/#experiencia" className="hit-area transition-colors hover:text-brand">
-                Código de etiqueta
+              <a href="/#ubicacion" className="hit-area transition-colors hover:text-brand">
+                Ubicación
               </a>
             </li>
           </ul>

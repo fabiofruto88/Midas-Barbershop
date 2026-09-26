@@ -28,6 +28,12 @@ export const adminApi = {
   deleteUser: (id) => api(`/users/${id}`, { method: 'DELETE' }),
 }
 
+export const resultsApi = {
+  published: () => api('/results/public'),
+  all: () => api('/results'),
+  setPublished: (id, isPublished) => api(`/results/${id}`, { method: 'PATCH', body: { isPublished } }),
+}
+
 export const barberApi = {
   myAvailability: () => api('/barbers/me/availability'),
   setMyAvailability: (schedule) => api('/barbers/me/availability', { method: 'PUT', body: { schedule } }),

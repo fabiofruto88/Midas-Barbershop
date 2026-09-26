@@ -19,4 +19,6 @@ export const queryKeys = {
   myAppointments: ['appointments', 'me'],
   agenda: (date, barberId) => ['appointments', 'agenda', date, barberId ?? 'all'],
   myAvailability: ['availability', 'me'],
+  publishedResults: ['results', 'public'],
+  allResults: ['results', 'all'],
 }

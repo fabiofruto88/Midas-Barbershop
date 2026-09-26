@@ -14,6 +14,7 @@ import ServiceHistoryPage from '../pages/ServiceHistoryPage'
 import AdminLayout from '../pages/admin/AdminLayout'
 import ServicesAdminPage from '../pages/admin/ServicesAdminPage'
 import TeamAdminPage from '../pages/admin/TeamAdminPage'
+import GalleryAdminPage from '../pages/admin/GalleryAdminPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
 const router = createBrowserRouter([
@@ -52,6 +53,7 @@ const router = createBrowserRouter([
               { index: true, element: <Navigate to="servicios" replace /> },
               { path: 'servicios', element: <ServicesAdminPage /> },
               { path: 'equipo', element: <TeamAdminPage /> },
+              { path: 'galeria', element: <GalleryAdminPage /> },
             ],
           },
         ],

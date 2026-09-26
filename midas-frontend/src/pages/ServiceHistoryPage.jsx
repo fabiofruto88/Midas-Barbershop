@@ -132,6 +132,11 @@ function HistoryCard({ appointment }) {
         <p className="text-sm text-muted">
           {formatLongDate(appointment.date)} · {formatTime(appointment.timeSlot)}
         </p>
+        {result && (
+          <p className={`text-xs font-medium ${result.isPublished ? 'text-success' : 'text-muted'}`}>
+            {result.isPublished ? 'Publicada en la galería de la web' : 'Pendiente de publicación por el admin'}
+          </p>
+        )}
       </div>
 
       {result?.notes && <p className="border-l-2 border-brand pl-3 text-sm text-muted">{result.notes}</p>}

@@ -1,20 +1,34 @@
-import { Link } from 'react-router'
-import { treatments } from '../../content/landing'
-import iconCheck from '../../assets/landing/icon-check.svg'
-import iconStar from '../../assets/landing/icon-star.svg'
+import { useServices } from '../../hooks/useCatalog'
+import { useBookingStore } from '../../store/bookingStore'
+import { formatPrice } from '../../lib/format'
+import iconCrown from '../../assets/landing/icon-crown.svg'
+import iconScissors from '../../assets/landing/icon-scissors.svg'
+import iconSpa from '../../assets/landing/icon-spa.svg'
+import iconMedal from '../../assets/landing/icon-medal.svg'
 import iconChevron from '../../assets/landing/icon-chevron-right.svg'
 import SectionHeading, { Accent } from './SectionHeading'
 import Icon from './Icon'
 import Reveal from './Reveal'
 
-function TreatmentCard({ treatment, index }) {
-  const { featured, tight } = treatment
+// Iconos decorativos que se alternan entre los servicios del catálogo.
+const icons = [
+  { src: iconCrown, className: 'h-[19.5px] w-[21.667px]' },
+  { src: iconScissors, className: 'size-[21.667px]' },
+  { src: iconSpa, className: 'size-[21.667px]' },
+  { src: iconMedal, className: 'h-[21.667px] w-[10.833px]' },
+]
+
+function ServiceCard({ service, index, featured }) {
+  const selectService = useBookingStore((state) => state.selectService)
+  const icon = icons[index % icons.length]
+  const titleId = `servicio-${service.id}`
+
   return (
     <Reveal
       as="article"
       delay={index * 0.06}
-      aria-labelledby={`tratamiento-${index}`}
-      className={`relative flex flex-col justify-between ${
+      aria-labelledby={titleId}
+      className={`relative flex h-full flex-col justify-between ${
         featured
           ? 'border-2 border-brand/70 bg-surface-2 p-6 drop-shadow-[0px_12px_20px_rgba(212,175,55,0.2)]'
           : 'border border-line/30 bg-card p-6 transition-colors duration-200 hover:border-brand/40'
@@ -22,7 +36,7 @@ function TreatmentCard({ treatment, index }) {
     >
       {featured ? (
         <p className="absolute -top-3 left-1/2 -translate-x-1/2 bg-linear-to-r from-brand-strong to-[#d4af37] px-3 py-0.5 text-[9px] leading-[13.5px] font-bold tracking-[0.25em] whitespace-nowrap text-on-brand uppercase">
-          Supremo VIP
+          Experiencia completa
         </p>
       ) : (
         <span
@@ -39,47 +53,26 @@ function TreatmentCard({ treatment, index }) {
               featured ? 'border-brand bg-brand/20' : 'border-brand/20 bg-surface-2'
             }`}
           >
-            <Icon src={treatment.icon} className={treatment.iconSize} />
+            <Icon src={icon.src} className={icon.className} />
           </span>
           <p className="text-[9px] leading-3 font-bold tracking-[0.1em] text-brand uppercase">
             <span className="sr-only">Duración: </span>
-            {treatment.duration}
+            {service.durationMinutes} min
           </p>
         </div>
         <h3
-          id={`tratamiento-${index}`}
+          id={titleId}
           className={`pt-3 font-display text-xl leading-7 font-medium uppercase ${featured ? 'text-brand' : 'text-text'}`}
         >
-          {treatment.name}
+          {service.name}
         </h3>
-        <p
-          className={`text-xs leading-[19.5px] tracking-[0.02em] ${tight ? '' : 'pb-3'} ${
-            featured ? 'text-text-soft' : 'text-muted'
-          }`}
-        >
-          {treatment.description}
-        </p>
-        <ul
-          className={`flex flex-col gap-1 border-t ${tight ? 'pt-5' : 'pt-2'} ${
-            featured ? 'border-brand/20' : 'border-line/20'
-          }`}
-        >
-          {treatment.features.map((feature) => (
-            <li
-              key={feature}
-              className={`flex items-center gap-2 text-xs leading-[18px] tracking-[0.02em] ${
-                featured ? 'text-text' : 'text-text-soft/80'
-              }`}
-            >
-              {featured ? (
-                <Icon src={iconStar} className="h-[11.083px] w-[11.667px]" />
-              ) : (
-                <Icon src={iconCheck} className="h-[7.015px] w-[9.508px]" />
-              )}
-              {feature}
-            </li>
-          ))}
-        </ul>
+        {service.description && (
+          <p
+            className={`text-xs leading-[19.5px] tracking-[0.02em] ${featured ? 'text-text-soft' : 'text-muted'}`}
+          >
+            {service.description}
+          </p>
+        )}
       </div>
 
       <div
@@ -87,29 +80,80 @@ function TreatmentCard({ treatment, index }) {
       >
         <p className={`font-display text-xl leading-7 font-bold ${featured ? 'text-brand' : 'text-brand-soft'}`}>
           <span className="sr-only">Precio: </span>
-          {treatment.price}
+          {formatPrice(service.price)}
         </p>
+        {/* Preselecciona el servicio en la terminal de reserva de esta misma página. */}
         {featured ? (
-          <Link
-            to="/reservar"
+          <a
+            href="#reservas"
+            onClick={() => selectService(service.id)}
             className="pressable bg-gold px-4 py-2 text-[9px] leading-3 font-bold tracking-[0.1em] text-on-brand uppercase hover:brightness-110"
           >
-            Reservar<span className="sr-only"> {treatment.name}</span>
-          </Link>
+            Reservar<span className="sr-only"> {service.name}</span>
+          </a>
         ) : (
-          <Link
-            to="/reservar"
+          <a
+            href="#reservas"
+            onClick={() => selectService(service.id)}
             className="group/link hit-area flex items-center gap-1 py-1 text-[9px] leading-3 font-bold tracking-[0.1em] text-brand uppercase"
           >
-            Elegir<span className="sr-only"> {treatment.name}</span>
+            Elegir<span className="sr-only"> {service.name}</span>
             <Icon
               src={iconChevron}
               className="h-[7px] w-[4.317px] transition-transform duration-200 ease-out group-hover/link:translate-x-0.5 motion-reduce:transition-none"
             />
-          </Link>
+          </a>
         )}
       </div>
     </Reveal>
+  )
+}
+
+function ServiceGrid() {
+  const { data: services, isPending, error } = useServices()
+
+  if (isPending) {
+    return (
+      <div className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true">
+        {[0, 1, 2, 3].map((key) => (
+          <span
+            key={key}
+            aria-hidden
+            className="block h-64 animate-pulse border border-line/20 bg-card motion-reduce:animate-none"
+          />
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <p role="alert" className="border border-line/30 bg-card p-6 text-sm text-danger">
+        No pudimos cargar los servicios. {error.message}
+      </p>
+    )
+  }
+
+  if (!services.length) {
+    return (
+      <p className="border border-line/30 bg-card p-6 text-sm text-muted">
+        Muy pronto publicaremos nuestra carta de servicios.
+      </p>
+    )
+  }
+
+  // Se destaca el servicio más completo (el de mayor precio) cuando hay varios.
+  const featuredId =
+    services.length > 1
+      ? services.reduce((top, item) => (Number(item.price) > Number(top.price) ? item : top)).id
+      : null
+
+  return (
+    <div className="grid items-stretch gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+      {services.map((service, index) => (
+        <ServiceCard key={service.id} service={service} index={index} featured={service.id === featuredId} />
+      ))}
+    </div>
   )
 }
 
@@ -121,27 +165,23 @@ export default function ServicesSection() {
           <SectionHeading
             id="servicios-title"
             eyebrowRule
-            eyebrow="Carta de tratamientos realeza"
+            eyebrow="Carta de servicios"
             title={
               <>
                 Nuestro arte, <Accent>tu legado</Accent>
               </>
             }
             titleClassName="text-[32px] leading-10 tracking-[0.025em] sm:text-[40px] sm:leading-12"
-            description="Cada servicio es un protocolo pausado y meticuloso diseñado para restablecer la fisonomía masculina mediante fórmulas enriquecidas, vapor termal y cuchillas damasquinas templadas a mano."
+            description="Cada servicio se realiza con cita previa y atención exclusiva de tu barbero durante toda la sesión: técnica precisa, productos de calidad y el tiempo necesario para que salgas impecable."
             descriptionClassName="text-sm leading-[22px] font-light tracking-[0.01em] text-text-soft"
             className="max-w-[672px] [&>h2]:pt-0"
           />
           <p className="text-[9px] leading-3 font-bold tracking-[0.2em] text-muted uppercase md:text-right">
-            Todos los rituales incluyen cortesía del cellar privado
+            Precios en pesos colombianos · Sesiones de 60 minutos
           </p>
         </Reveal>
 
-        <div className="grid items-start gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-          {treatments.map((treatment, index) => (
-            <TreatmentCard key={treatment.name} treatment={treatment} index={index} />
-          ))}
-        </div>
+        <ServiceGrid />
       </div>
     </section>
   )

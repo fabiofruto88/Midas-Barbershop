@@ -95,7 +95,10 @@ model ServiceResult {
   appointmentId   String      @unique
   imageUrl        String      // URL segura de Cloudinary
   notes           String?     // Opcional, por si el barbero quiere dejar un comentario técnico
+  isPublished     Boolean     @default(false) // El admin decide qué fotos salen en la galería pública
   createdAt       DateTime    @default(now())
 
   appointment     Appointment @relation(fields: [appointmentId], references: [id])
+
+  @@index([isPublished, createdAt])
 }

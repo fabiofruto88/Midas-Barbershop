@@ -215,10 +215,6 @@ export default function BookingSection() {
               barberId={barberId}
               onSelect={selectBarber}
             />
-            <p className="border-l-2 border-brand/60 bg-surface-2/40 py-4 pr-4 pl-4 text-xs leading-[18px] tracking-[0.02em] text-muted">
-              <strong className="font-medium text-brand-soft">Nota Real:</strong> Todos los barberos han completado más de
-              500 horas de especialización en la Real Academia de Alta Barbería de Milán.
-            </p>
           </Reveal>
 
           <Reveal

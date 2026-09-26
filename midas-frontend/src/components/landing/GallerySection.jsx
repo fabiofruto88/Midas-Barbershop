@@ -1,12 +1,21 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
-import { galleryFilters, galleryItems } from '../../content/landing'
+import { resultsApi } from '../../services/midas'
+import { queryKeys } from '../../lib/queryClient'
+import { optimizedImageUrl } from '../../lib/images'
 import SectionHeading, { Accent } from './SectionHeading'
 import Reveal from './Reveal'
 
 const ease = [0.23, 1, 0.32, 1]
+const ALL = 'Todos'
+const MAX_FILTERS = 4
+
+const monthYear = (value) =>
+  new Intl.DateTimeFormat('es-CO', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(value))
 
 function GalleryCard({ item }) {
+  const { service, barber, date } = item.appointment
   return (
     <motion.figure
       layout
@@ -17,18 +26,18 @@ function GalleryCard({ item }) {
       className="group relative flex flex-col overflow-clip border border-line/20 bg-surface-2 p-px"
     >
       <img
-        src={item.image}
-        alt={item.alt}
+        src={optimizedImageUrl(item.imageUrl, { width: 600, height: 720 })}
+        alt={`${service.name} realizado por ${barber.name}`}
         loading="lazy"
         className="h-[358px] w-full object-cover grayscale transition-transform duration-500 ease-(--ease-out) [@media(hover:hover)]:group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
       />
       <div aria-hidden className="absolute inset-0 bg-linear-to-t from-bg via-bg/20 to-bg/0 opacity-80" />
       <figcaption className="absolute inset-x-0 -bottom-4 flex flex-col p-4 transition-transform duration-300 ease-(--ease-out) [@media(hover:hover)]:group-hover:-translate-y-4 motion-reduce:transition-none">
-        <span className="text-[9px] leading-3 font-bold tracking-[0.25em] text-brand uppercase">{item.eyebrow}</span>
-        <span className="pb-2 font-display text-xl leading-7 font-medium text-text">{item.title}</span>
+        <span className="text-[9px] leading-3 font-bold tracking-[0.25em] text-brand uppercase">Resultado real</span>
+        <span className="pb-2 font-display text-xl leading-7 font-medium text-text">{service.name}</span>
         <span className="grid grid-cols-2 gap-4 border-t border-line/30 pt-2 text-xs leading-[18px] tracking-[0.02em]">
-          <span className="text-muted">{item.meta}</span>
-          <span className="font-medium text-brand-soft">{item.detail}</span>
+          <span className="text-muted">Barbero: {barber.name}</span>
+          <span className="font-medium text-brand-soft first-letter:uppercase">{monthYear(date)}</span>
         </span>
       </figcaption>
     </motion.figure>
@@ -36,8 +45,22 @@ function GalleryCard({ item }) {
 }
 
 export default function GallerySection() {
-  const [filter, setFilter] = useState(galleryFilters[0])
-  const items = filter === galleryFilters[0] ? galleryItems : galleryItems.filter((item) => item.category === filter)
+  const [filter, setFilter] = useState(ALL)
+  const { data: results, isPending, error } = useQuery({
+    queryKey: queryKeys.publishedResults,
+    queryFn: resultsApi.published,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // Filtros según los servicios que tienen fotos publicadas (los más frecuentes).
+  const counts = new Map()
+  for (const item of results ?? []) {
+    const name = item.appointment.service.name
+    counts.set(name, (counts.get(name) ?? 0) + 1)
+  }
+  const filters = [ALL, ...[...counts].sort((a, b) => b[1] - a[1]).slice(0, MAX_FILTERS).map(([name]) => name)]
+  const active = filters.includes(filter) ? filter : ALL
+  const items = (results ?? []).filter((item) => active === ALL || item.appointment.service.name === active)
 
   return (
     <section
@@ -55,40 +78,62 @@ export default function GallerySection() {
                 Resultados <Accent>impecables</Accent>
               </>
             }
-            description="Registro visual de nuestras creaciones más distinguidas en caballeros líderes de la diplomacia, finanzas y arte."
+            description="Trabajos reales de nuestros barberos, tomados al terminar cada servicio."
             className="max-w-[560px] pt-1.5"
           />
-          <div
-            role="group"
-            aria-label="Filtrar por estilo"
-            className="flex w-full max-w-[491px] flex-wrap gap-y-1 border border-line/30 bg-card p-1"
-          >
-            {galleryFilters.map((name) => {
-              const selected = name === filter
-              return (
-                <button
-                  key={name}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => setFilter(name)}
-                  className={`pressable px-4 py-1.5 text-[9px] leading-3 font-bold tracking-[0.05em] uppercase ${
-                    selected ? 'bg-brand text-on-brand' : 'text-muted hover:text-brand'
-                  }`}
-                >
-                  {name}
-                </button>
-              )
-            })}
-          </div>
+          {filters.length > 2 && (
+            <div
+              role="group"
+              aria-label="Filtrar por servicio"
+              className="flex w-fit max-w-full flex-wrap gap-y-1 border border-line/30 bg-card p-1"
+            >
+              {filters.map((name) => {
+                const selected = name === active
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setFilter(name)}
+                    className={`pressable px-4 py-1.5 text-[9px] leading-3 font-bold tracking-[0.05em] uppercase ${
+                      selected ? 'bg-brand text-on-brand' : 'text-muted hover:text-brand'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </Reveal>
 
-        <motion.div layout className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" aria-live="polite">
-          <AnimatePresence mode="popLayout" initial={false}>
-            {items.map((item) => (
-              <GalleryCard key={item.title} item={item} />
+        {isPending ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true">
+            {[0, 1, 2, 3].map((key) => (
+              <span
+                key={key}
+                aria-hidden
+                className="block h-[360px] animate-pulse border border-line/20 bg-surface-2 motion-reduce:animate-none"
+              />
             ))}
-          </AnimatePresence>
-        </motion.div>
+          </div>
+        ) : error ? (
+          <p role="alert" className="border border-line/30 bg-card p-6 text-sm text-danger">
+            No pudimos cargar la galería. {error.message}
+          </p>
+        ) : !items.length ? (
+          <p className="border border-line/30 bg-card p-6 text-sm text-muted">
+            Muy pronto compartiremos aquí los trabajos de nuestros barberos.
+          </p>
+        ) : (
+          <motion.div layout className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" aria-live="polite">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {items.map((item) => (
+                <GalleryCard key={item.id} item={item} />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </div>
     </section>
   )

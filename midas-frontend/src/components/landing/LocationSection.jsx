@@ -1,87 +1,87 @@
-import { amenities, contact } from '../../content/landing'
-import mapImage from '../../assets/landing/map-madrid.png'
-import iconPin from '../../assets/landing/icon-diamond-pin.svg'
+import { contact, schedule } from '../../content/landing'
 import SectionHeading, { Accent } from './SectionHeading'
-import Icon from './Icon'
 import Reveal from './Reveal'
 
+const infoLabel = 'text-[9px] leading-3 font-bold tracking-[0.1em] text-muted uppercase'
+
 export default function LocationSection() {
+  const { lat, lng } = contact.location
+
   return (
-    <section id="experiencia" aria-labelledby="experiencia-title" className="bg-bg-alt py-20 lg:py-28">
+    <section id="ubicacion" aria-labelledby="ubicacion-title" className="bg-bg-alt py-20 lg:py-28">
       <div className="mx-auto grid max-w-[1440px] grid-cols-1 gap-12 px-4 sm:px-8 lg:grid-cols-12 lg:gap-8 xl:px-16">
-        <Reveal className="flex flex-col gap-4 self-center lg:col-span-6">
+        <Reveal className="flex flex-col gap-6 self-center lg:col-span-5">
           <SectionHeading
-            id="experiencia-title"
-            eyebrow="Santuario urbano"
+            id="ubicacion-title"
+            eyebrow="Ubicación"
             title={
               <>
-                El club privado &amp;
+                Visítanos en
                 <br />
-                <Accent>lounge reservado</Accent>
+                <Accent>Barranquilla</Accent>
               </>
             }
             className="gap-2 pt-1.5 [&>h2]:pt-0"
           />
-          <p className="text-base leading-[26px] font-light tracking-[0.01em] text-text-soft">
-            Ubicado en la planta noble del señorial Paseo de la Castellana, el espacio de Midas ha sido concebido bajo la
-            arquitectura de un speakeasy de la belle époque, garantizando el aislamiento acústico y la más estricta
-            intimidad.
-          </p>
-          <ul className="grid gap-4 pt-2 sm:grid-cols-2">
-            {amenities.map((amenity) => (
-              <li key={amenity.title} className="flex flex-col gap-1 border border-line/20 bg-card p-4">
-                <Icon src={amenity.icon} className={amenity.iconSize} />
-                <h3 className="pt-[3px] font-display text-xl leading-7 font-medium text-text">{amenity.title}</h3>
-                <p className="text-xs leading-[18px] tracking-[0.02em] text-muted">{amenity.text}</p>
-              </li>
-            ))}
-          </ul>
+
+          <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <div className="flex flex-col gap-1 border border-line/20 bg-card p-4">
+              <dt className={infoLabel}>Dirección</dt>
+              <dd className="flex flex-col text-sm leading-[22px] text-text">
+                {contact.address}
+                <span className="text-muted">{contact.city}</span>
+              </dd>
+            </div>
+            <div className="flex flex-col gap-1 border border-line/20 bg-card p-4">
+              <dt className={infoLabel}>Teléfono y WhatsApp</dt>
+              <dd className="flex flex-col text-sm leading-[22px]">
+                <a href={contact.phoneHref} className="text-brand-soft transition-colors hover:text-brand">
+                  {contact.phone}
+                </a>
+                <a
+                  href={contact.whatsappHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-muted transition-colors hover:text-brand"
+                >
+                  Escribir por WhatsApp<span className="sr-only"> (se abre en una pestaña nueva)</span>
+                </a>
+              </dd>
+            </div>
+            <div className="flex flex-col gap-2 border border-line/20 bg-card p-4 sm:col-span-2 lg:col-span-1 xl:col-span-2">
+              <dt className={infoLabel}>Horario</dt>
+              {schedule.map((row) => (
+                <dd key={row.day} className="flex justify-between gap-4 text-sm leading-[22px]">
+                  <span className="text-text-soft">{row.day}</span>
+                  <span className={row.highlight ? 'text-[#e9c349]' : 'text-brand-soft'}>{row.hours}</span>
+                </dd>
+              ))}
+            </div>
+          </dl>
         </Reveal>
 
         <Reveal
           delay={0.08}
-          className="flex flex-col self-center border border-brand/30 bg-surface p-2 drop-shadow-[0px_12px_20px_rgba(0,0,0,0.8)] lg:col-span-6"
+          className="flex flex-col self-center border border-brand/30 bg-surface p-2 drop-shadow-[0px_12px_20px_rgba(0,0,0,0.8)] lg:col-span-7"
         >
-          <a
-            href={contact.mapHref}
-            target="_blank"
-            rel="noreferrer"
-            className="group relative flex h-[400px] items-center justify-center overflow-clip bg-[#353437]"
-            aria-label={`Ver ${contact.address}, Madrid, en Google Maps (se abre en una pestaña nueva)`}
-          >
-            <img src={mapImage} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" />
-            <span
-              aria-hidden
-              className="absolute inset-0 bg-bg/70 backdrop-blur-[1px] transition-colors duration-300 group-hover:bg-bg/60"
+          <div className="relative h-[400px] overflow-clip bg-[#353437]">
+            <iframe
+              title={`Mapa de Midas en ${contact.address}`}
+              src={contact.mapEmbedSrc}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="absolute inset-0 size-full border-0 [filter:grayscale(1)_invert(0.9)_contrast(0.9)]"
             />
-            <span className="relative flex flex-col items-center">
-              <span
-                aria-hidden
-                className="grid size-14 place-items-center rounded-full bg-[linear-gradient(135deg,#f2ca50_0%,#8a6310_100%)] p-1 drop-shadow-[0px_0px_15px_rgba(212,175,55,0.6)] transition-transform duration-300 ease-(--ease-out) group-hover:-translate-y-0.5"
-              >
-                <span className="grid size-full place-items-center rounded-full bg-bg">
-                  <Icon src={iconPin} className="h-[17.1px] w-[19.25px]" />
-                </span>
-              </span>
-              <span className="mt-2 flex flex-col items-center gap-[4.5px] border border-brand/40 bg-bg/90 px-4 pt-[13.5px] pb-1.5 text-center backdrop-blur-[6px]">
-                <span className="text-[9px] leading-3 font-bold tracking-[0.1em] text-brand uppercase">
-                  Midas Haute Salon
-                </span>
-                <span className="text-[11px] leading-[16.5px] text-muted">{contact.address}</span>
-              </span>
-            </span>
             <span
               aria-hidden
-              className="absolute bottom-3 left-3 text-[9px] leading-[13.5px] tracking-[0.1em] text-brand/60"
+              className="pointer-events-none absolute bottom-3 left-3 bg-bg/80 px-2 py-1 text-[9px] leading-[13.5px] tracking-[0.1em] text-brand/80"
             >
-              LAT 40.4502° N // LON 3.6908° W — SALAMANCA DIST.
+              LAT {lat.toFixed(4)}° N // LON {Math.abs(lng).toFixed(4)}° W — BARRANQUILLA
             </span>
-          </a>
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-4 bg-card p-4">
             <p className="flex flex-col pb-[1.5px]">
-              <span className="text-[9px] leading-3 font-bold tracking-[0.1em] text-muted uppercase">
-                Concierge telefónico privado
-              </span>
+              <span className={infoLabel}>Reservas por teléfono</span>
               <a
                 href={contact.phoneHref}
                 className="font-display text-xl leading-7 font-semibold text-brand-soft transition-colors hover:text-brand"
@@ -90,10 +90,12 @@ export default function LocationSection() {
               </a>
             </p>
             <a
-              href={contact.phoneHref}
+              href={contact.directionsHref}
+              target="_blank"
+              rel="noreferrer"
               className="pressable border border-brand/50 bg-surface-2 px-6 py-2.5 text-[9px] leading-3 font-bold tracking-[0.1em] text-brand uppercase hover:border-brand hover:bg-brand/10"
             >
-              Solicitar recogida valet
+              Cómo llegar<span className="sr-only"> (Google Maps, se abre en una pestaña nueva)</span>
             </a>
           </div>
         </Reveal>

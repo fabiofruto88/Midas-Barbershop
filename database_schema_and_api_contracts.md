@@ -104,9 +104,12 @@ model ServiceResult {
   appointmentId   String      @unique
   imageUrl        String      // URL segura de Cloudinary
   notes           String?     // Opcional, por si el barbero quiere dejar un comentario técnico
+  isPublished     Boolean     @default(false) // El admin decide qué fotos salen en la galería pública
   createdAt       DateTime    @default(now())
 
   appointment     Appointment @relation(fields: [appointmentId], references: [id])
+
+  @@index([isPublished, createdAt])
 }
 ```
 
@@ -203,9 +206,35 @@ Sube la foto del corte finalizado. Solo permitido para Barberos.
     {
       "id": "UUID",
       "appointmentId": "UUID",
-      "imageUrl": "https://res.cloudinary.com/midas/image/upload/v1234/foto.jpg"
+      "imageUrl": "https://res.cloudinary.com/midas/image/upload/v1234/foto.jpg",
+      "isPublished": false
     }
     ```
+*   Toda foto nueva (o reemplazada) queda con `isPublished: false` hasta que el admin la apruebe.
+
+#### `GET /results/public`
+Galería pública de la landing: solo resultados con `isPublished: true`, del más reciente al más antiguo. Sin datos del cliente ni notas técnicas.
+*   **Query:** `limit` (1-24, por defecto 12).
+*   **Response (200 OK):**
+    ```json
+    [
+      {
+        "id": "UUID",
+        "imageUrl": "https://res.cloudinary.com/...",
+        "createdAt": "2026-09-26T15:00:00.000Z",
+        "appointment": { "date": "2026-09-26T00:00:00.000Z", "service": { "name": "Corte" }, "barber": { "name": "Juan" } }
+      }
+    ]
+    ```
+
+#### `GET /results` (Admin)
+Todos los resultados para moderar la galería. Mismo formato que el público más `notes` e `isPublished`.
+*   **Query:** `isPublished` (`true` | `false`, opcional).
+
+#### `PATCH /results/:id` (Admin)
+Publica u oculta una foto en la galería.
+*   **Body:** `{ "isPublished": true }`
+*   **Response (200 OK):** `{ "id": "UUID", "isPublished": true }` · 404 si no existe.
 
 ---
 
