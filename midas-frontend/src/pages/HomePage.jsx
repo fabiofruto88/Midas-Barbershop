@@ -4,6 +4,7 @@ import { useBookingAccess } from '../hooks/useAuth'
 import HeroSection from '../components/landing/HeroSection'
 import HighlightStrip from '../components/landing/HighlightStrip'
 import ServicesSection from '../components/landing/ServicesSection'
+import RitualSection from '../components/landing/RitualSection'
 import BookingSection from '../components/landing/BookingSection'
 import GallerySection from '../components/landing/GallerySection'
 import TestimonialsSection from '../components/landing/TestimonialsSection'
@@ -25,6 +26,7 @@ export default function HomePage() {
       <HeroSection />
       <HighlightStrip />
       <ServicesSection />
+      <RitualSection />
       {canBook && <BookingSection />}
       <GallerySection />
       <TestimonialsSection />

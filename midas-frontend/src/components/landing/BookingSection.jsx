@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { useQueries } from '@tanstack/react-query'
-import { AnimatePresence, motion, useScroll, useTransform } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { availabilityQueryOptions, useBarbers, useServices } from '../../hooks/useCatalog'
 import { useBookingStore } from '../../store/bookingStore'
 import { appointmentsApi } from '../../services/midas'
@@ -9,7 +9,8 @@ import { queryKeys } from '../../lib/queryClient'
 import { formatPrice, nextDays, parseDate, toDateString, businessToday } from '../../lib/format'
 import { barberProfiles } from '../../content/landing'
 import { barberPortrait } from '../../lib/barberPortrait'
-import { distance, duration, ease, exitDuration, spring, useMotionPrefs } from '../../lib/motion'
+import { duration, ease, exitDuration, scroll, spring, stagger } from '../../lib/motion'
+import { conditions, gsap, useGSAP } from '../../lib/gsap'
 import iconRadioChecked from '../../assets/landing/icon-radio-checked.svg'
 import iconRadio from '../../assets/landing/icon-radio.svg'
 import SectionHeading, { Accent } from './SectionHeading'
@@ -129,11 +130,28 @@ function BarberList({ barbers, isPending, error, barberId, onSelect }) {
 export default function BookingSection() {
   const navigate = useNavigate()
   const sectionRef = useRef(null)
-  const { parallax } = useMotionPrefs()
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] })
-  const haloShift = useTransform(
-    scrollYProgress,
-    (progress) => `translate3d(0, ${(progress * 2 - 1) * distance.halo}px, 0)`,
+  const haloRef = useRef(null)
+
+  // Parallax sutil del halo dorado mientras la sección cruza la pantalla (menos en móvil).
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add(conditions, ({ conditions: { desktop, reduce } }) => {
+        if (reduce) return
+        const range = scroll.parallax.background * (desktop ? 1 : scroll.parallax.mobileFactor)
+        gsap.fromTo(
+          haloRef.current,
+          { y: -range },
+          {
+            y: range,
+            ease: 'none',
+            scrollTrigger: { trigger: sectionRef.current, start: 'top bottom', end: 'bottom top', scrub: scroll.scrub.smooth },
+          },
+        )
+      })
+      return () => mm.revert()
+    },
+    { scope: sectionRef },
   )
   const { data: barbers, isPending: loadingBarbers, error: barbersError } = useBarbers()
   const { data: services, isPending: loadingServices, error: servicesError } = useServices()
@@ -198,10 +216,10 @@ export default function BookingSection() {
       aria-labelledby="barberos-title"
       className="relative overflow-clip bg-bg py-20 lg:py-28"
     >
-      {/* Halo dorado con parallax sutil (solo desktop); -translate-1/2 usa `translate` y se compone con él. */}
-      <motion.div
+      {/* Halo dorado con parallax: -translate-1/2 usa la propiedad `translate` y se compone con el `y` de GSAP. */}
+      <div
+        ref={haloRef}
         aria-hidden
-        style={parallax ? { transform: haloShift } : undefined}
         className="absolute top-1/2 left-1/2 h-[500px] w-[900px] -translate-1/2 rounded-full bg-brand/5 blur-[70px]"
       />
       <div className="relative mx-auto flex max-w-[1440px] flex-col items-center gap-10 px-4 sm:px-8 xl:px-16">
@@ -237,7 +255,7 @@ export default function BookingSection() {
 
           <Reveal
             id="reservas"
-            delay={0.08}
+            delay={stagger.item}
             className="flex flex-col gap-6 border border-brand/30 bg-surface p-5 shadow-[0px_16px_48px_0px_rgba(0,0,0,0.85),0px_0px_2px_0px_rgba(212,175,55,0.3)] sm:p-10 lg:col-span-7"
           >
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line/30 pb-4">

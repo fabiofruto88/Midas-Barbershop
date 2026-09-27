@@ -39,10 +39,20 @@
       "layout": { "type": "spring", "duration": 0.45, "bounce": 0.12 },
       "magnetic": { "stiffness": 220, "damping": 18, "mass": 0.4 }
     },
-    "distance": { "xs": 4, "sm": 8, "md": 16, "lg": 24, "lift": -4, "magnetMax": 8, "parallax": 8, "halo": 40 },
+    "distance": { "xs": 4, "sm": 8, "md": 16, "lg": 24, "xl": 48, "lift": -4, "magnetMax": 8 },
     "scale": { "press": 0.97, "enter": 0.97, "imageHover": 1.03, "heroImageFrom": 1.06 },
     "stagger": { "word": 0.04, "item": 0.06, "maxTotal": 0.3 },
     "hero": { "subtitle": 0.35, "body": 0.45, "cta": 0.55, "support": 0.65 },
+    "scroll": {
+      "$comment": "Distancias en px, parallax y desplazamientos de imagen en %, stepLength en % de viewport por paso.",
+      "revealStart": "top 80%",
+      "scrub": { "smooth": 0.6, "pin": 0.8, "indicator": true },
+      "heroExit": { "y": -48, "opacity": 0, "imageScale": 1.05, "imageShift": 8 },
+      "parallax": { "background": 40, "gallery": 4, "mobileFactor": 0.5 },
+      "pin": { "breakpoint": 1024, "stepLength": 60, "hold": 0.4, "dim": 0.25, "numberShift": 20 },
+      "textScrub": { "from": 0.15, "start": "top 75%", "end": "center 45%" },
+      "horizontal": { "minItems": 5, "cardWidth": 320 }
+    },
     "reducedMotion": "Solo opacidad: sin parallax, imán, contador ni desplazamientos.",
     "mobile": "Sin hover persistente, sin imán ni parallax; reveals con distancia sm."
   }

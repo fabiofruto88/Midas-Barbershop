@@ -1,9 +1,10 @@
+import { useRef } from 'react'
 import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { reviewsApi } from '../../services/midas'
 import { useBookingAccess } from '../../hooks/useAuth'
 import { queryKeys } from '../../lib/queryClient'
-import { staggerDelay } from '../../lib/motion'
+import { useBatchReveal } from '../../lib/gsap'
 import { Stars } from '../ui/StarRating'
 import SectionHeading, { Accent } from './SectionHeading'
 import Reveal from './Reveal'
@@ -17,12 +18,11 @@ const initials = (name) =>
 
 const averageFormatter = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
-function TestimonialCard({ review, index, featured }) {
+function TestimonialCard({ review, featured }) {
   const { service, barber } = review.appointment
   return (
-    <Reveal
-      as="figure"
-      delay={staggerDelay(index)}
+    <figure
+      data-batch
       className={`lift relative flex h-full flex-col justify-between border bg-card p-6 ${
         featured ? 'border-brand/40 drop-shadow-[0px_8px_15px_rgba(212,175,55,0.1)]' : 'border-line/30'
       }`}
@@ -63,7 +63,7 @@ function TestimonialCard({ review, index, featured }) {
           </span>
         </span>
       </figcaption>
-    </Reveal>
+    </figure>
   )
 }
 
@@ -74,6 +74,8 @@ function Testimonials() {
     queryFn: reviewsApi.published,
     staleTime: 5 * 60 * 1000,
   })
+  const gridRef = useRef(null)
+  useBatchReveal(gridRef, [data])
 
   if (isPending) {
     return (
@@ -122,9 +124,9 @@ function Testimonials() {
           {summary.count} {summary.count === 1 ? 'reseña' : 'reseñas'}
         </span>
       </p>
-      <div className="grid w-full items-stretch gap-6 md:grid-cols-3">
+      <div ref={gridRef} className="grid w-full items-stretch gap-6 md:grid-cols-3">
         {reviews.map((review, index) => (
-          <TestimonialCard key={review.id} review={review} index={index} featured={reviews.length >= 3 && index % 3 === 1} />
+          <TestimonialCard key={review.id} review={review} featured={reviews.length >= 3 && index % 3 === 1} />
         ))}
       </div>
     </>

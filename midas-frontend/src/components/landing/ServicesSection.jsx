@@ -1,8 +1,9 @@
+import { useRef } from 'react'
 import { useServices } from '../../hooks/useCatalog'
 import { useBookingStore } from '../../store/bookingStore'
 import { useBookingAccess } from '../../hooks/useAuth'
 import { formatPrice } from '../../lib/format'
-import { staggerDelay } from '../../lib/motion'
+import { useBatchReveal } from '../../lib/gsap'
 import iconCrown from '../../assets/landing/icon-crown.svg'
 import iconScissors from '../../assets/landing/icon-scissors.svg'
 import iconSpa from '../../assets/landing/icon-spa.svg'
@@ -27,9 +28,8 @@ function ServiceCard({ service, index, featured }) {
   const titleId = `servicio-${service.id}`
 
   return (
-    <Reveal
-      as="article"
-      delay={staggerDelay(index)}
+    <article
+      data-batch
       aria-labelledby={titleId}
       className={`lift relative flex h-full flex-col justify-between ${
         featured
@@ -108,12 +108,14 @@ function ServiceCard({ service, index, featured }) {
           </a>
         )}
       </div>
-    </Reveal>
+    </article>
   )
 }
 
 function ServiceGrid() {
   const { data: services, isPending, error } = useServices()
+  const gridRef = useRef(null)
+  useBatchReveal(gridRef, [services])
 
   if (isPending) {
     return (
@@ -152,7 +154,7 @@ function ServiceGrid() {
       : null
 
   return (
-    <div className="grid items-stretch gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+    <div ref={gridRef} className="grid items-stretch gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
       {services.map((service, index) => (
         <ServiceCard key={service.id} service={service} index={index} featured={service.id === featuredId} />
       ))}

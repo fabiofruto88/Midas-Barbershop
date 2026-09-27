@@ -78,6 +78,19 @@
   color: transparent;
 }
 
+/*
+ * Texto dividido con SplitText. Las máscaras (`*-mask`) recortan la palabra mientras sube;
+ * el relleno extra evita cortar descendentes y la inclinación de las cursivas.
+ */
+.split-gold {
+  @apply text-gold;
+}
+.split-word-mask,
+.split-gold-mask {
+  padding: 0 0.04em 0.12em;
+  margin: 0 -0.04em -0.12em;
+}
+
 /* Feedback de pulsación en elementos presionables. */
 /* Usa la propiedad `scale` para componerse con los transforms de Motion y de `lift`. */
 @utility pressable {

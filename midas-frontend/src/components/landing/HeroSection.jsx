@@ -1,64 +1,69 @@
-import { useLayoutEffect, useRef } from 'react'
-import { motion, useScroll, useTransform } from 'motion/react'
+import { useRef } from 'react'
 import { heroBadges, heroSpecs } from '../../content/landing'
 import heroImage from '../../assets/landing/hero-barber.jpg'
 import iconArrow from '../../assets/landing/icon-arrow-right-dark.svg'
 import iconDiamond from '../../assets/landing/icon-diamond.svg'
 import iconAward from '../../assets/landing/icon-award.svg'
 import { useBookingAccess } from '../../hooks/useAuth'
-import { distance, duration, ease, heroTimeline, scale, stagger, useMotionPrefs } from '../../lib/motion'
+import { alignGradient, conditions, gsap, SplitText, useGSAP } from '../../lib/gsap'
+import { distance, duration, heroTimeline, scale, scroll, stagger } from '../../lib/motion'
 import Button from '../ui/Button'
 import Magnetic from '../ui/Magnetic'
 import Icon from './Icon'
 
-const TITLE = 'El toque de oro en tu estilo.'
-
-// Cada palabra lleva su propio degradado dorado; se alinea con el ancho del titular para que
-// el brillo se lea continuo, como cuando era un solo texto.
-function useContinuousGradient(ref) {
-  useLayoutEffect(() => {
-    const title = ref.current
-    if (!title) return
-    const words = title.querySelectorAll('[data-word]')
-    const paint = () => {
-      const width = title.clientWidth
-      for (const word of words) {
-        word.style.backgroundSize = `${width}px 100%`
-        word.style.backgroundPosition = `${-word.offsetLeft}px 0`
-      }
-    }
-    paint()
-    document.fonts?.ready.then(paint)
-    const observer = new ResizeObserver(paint)
-    observer.observe(title)
-    return () => observer.disconnect()
-  }, [ref])
-}
-
 export default function HeroSection() {
   const { canBook, staffHome } = useBookingAccess()
-  const { reduce, parallax } = useMotionPrefs()
   const sectionRef = useRef(null)
+  const contentRef = useRef(null)
   const titleRef = useRef(null)
-  useContinuousGradient(titleRef)
 
-  // Parallax de la foto mientras el hero sale de pantalla (solo desktop y sin reduced-motion).
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] })
-  const imageShift = useTransform(scrollYProgress, (progress) => `translate3d(0, ${-distance.parallax * progress}%, 0)`)
+  useGSAP(
+    () => {
+      const q = gsap.utils.selector(sectionRef)
+      const mm = gsap.matchMedia()
 
-  // Secuencia: titular (palabra a palabra) → subtítulo → texto → CTA → apoyos. Total ≈ 1.15s.
-  // Con reduced-motion todo es un fundido corto y simultáneo.
-  const timing = (delay) => ({
-    duration: reduce ? duration.fade : duration.reveal,
-    ease: ease.out,
-    delay: reduce ? 0 : delay,
-  })
-  const enter = (delay) => ({
-    initial: { opacity: 0, transform: `translateY(${reduce ? 0 : distance.md}px)` },
-    animate: { opacity: 1, transform: 'translateY(0px)' },
-    transition: timing(delay),
-  })
-  const fade = (delay) => ({ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: timing(delay) })
+      mm.add(conditions, ({ conditions: { desktop, reduce } }) => {
+        if (reduce) {
+          gsap.from([titleRef.current, ...q('[data-hero-text], [data-hero-support]')], {
+            opacity: 0,
+            duration: duration.fade,
+          })
+          return
+        }
+
+        // Entrada: titular palabra a palabra → subtítulo → texto → CTA → apoyos (≈1.15s).
+        const split = SplitText.create(titleRef.current, { type: 'words', mask: 'words', wordsClass: 'split-gold' })
+        gsap.set(titleRef.current, { backgroundImage: 'none' })
+        const stopGradient = alignGradient(titleRef.current, split.words)
+        const rise = { opacity: 0, y: distance.md }
+
+        gsap
+          .timeline()
+          .from(split.words, { yPercent: 100, duration: duration.heroWord, stagger: stagger.word }, 0)
+          .from(q('[data-hero-text="subtitle"]'), rise, heroTimeline.subtitle)
+          .from(q('[data-hero-text="body"]'), rise, heroTimeline.body)
+          .from(q('[data-hero-text="cta"]'), rise, heroTimeline.cta)
+          .from(q('[data-hero-support]'), { opacity: 0 }, heroTimeline.support)
+          // La foto es el LCP: nunca arranca invisible, solo se asienta desde una escala mayor.
+          .from(q('[data-hero-image]'), { scale: scale.heroImageFrom, duration: duration.heroImage }, 0)
+
+        // Salida con scrub mientras el hero deja la pantalla; en móvil, a la mitad de distancia.
+        const factor = desktop ? 1 : scroll.parallax.mobileFactor
+        gsap
+          .timeline({
+            defaults: { ease: 'none' },
+            scrollTrigger: { trigger: sectionRef.current, start: 'top top', end: 'bottom top', scrub: scroll.scrub.smooth },
+          })
+          .to(contentRef.current, { y: scroll.heroExit.y * factor, opacity: scroll.heroExit.opacity }, 0)
+          .to(q('[data-hero-shift]'), { yPercent: scroll.heroExit.imageShift * factor }, 0)
+          .to(q('[data-hero-zoom]'), { scale: scroll.heroExit.imageScale }, 0)
+
+        return stopGradient
+      })
+      return () => mm.revert()
+    },
+    { scope: sectionRef },
+  )
 
   return (
     <section
@@ -68,8 +73,8 @@ export default function HeroSection() {
     >
       <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-8 xl:px-16">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
-          <div className="flex flex-col items-start justify-center gap-6 self-center lg:col-span-7">
-            <motion.ul {...fade(heroTimeline.support)} className="flex flex-wrap gap-x-2.5 gap-y-2.5 py-px" aria-label="Distinciones">
+          <div ref={contentRef} className="flex flex-col items-start justify-center gap-6 self-center lg:col-span-7">
+            <ul data-hero-support className="flex flex-wrap gap-x-2.5 gap-y-2.5 py-px" aria-label="Distinciones">
               {heroBadges.map((badge) => (
                 <li
                   key={badge.label}
@@ -79,55 +84,33 @@ export default function HeroSection() {
                   {badge.label}
                 </li>
               ))}
-            </motion.ul>
+            </ul>
 
             <div className="flex w-full flex-col gap-2">
               <h1
                 ref={titleRef}
                 id="hero-title"
-                className="relative max-w-[658px] font-display text-[36px] leading-[42px] font-semibold tracking-[-0.02em] uppercase sm:text-[56px] sm:leading-16"
+                className="text-gold max-w-[658px] font-display text-[36px] leading-[42px] font-semibold tracking-[-0.02em] uppercase sm:text-[56px] sm:leading-16"
               >
-                <span className="sr-only">{TITLE}</span>
-                <span aria-hidden>
-                  {TITLE.split(' ').map((word, index) => (
-                    <span key={index}>
-                      {index > 0 && ' '}
-                      {/* La máscara recorta la palabra mientras sube desde abajo. */}
-                      <span className="-mb-[0.1em] inline-block overflow-clip pb-[0.1em] align-top">
-                        <motion.span
-                          data-word
-                          className="text-gold inline-block"
-                          initial={{ opacity: 0, transform: reduce ? 'translateY(0%)' : 'translateY(100%)' }}
-                          animate={{ opacity: 1, transform: 'translateY(0%)' }}
-                          transition={{
-                            duration: reduce ? duration.fade : duration.heroWord,
-                            ease: ease.out,
-                            delay: reduce ? 0 : index * stagger.word,
-                          }}
-                        >
-                          {word}
-                        </motion.span>
-                      </span>
-                    </span>
-                  ))}
-                </span>
+                El toque de oro en tu estilo.
               </h1>
-              <motion.p
-                {...enter(heroTimeline.subtitle)}
-                className="max-w-[576px] font-display text-lg leading-7 font-medium tracking-[0.025em] text-brand-soft/90 sm:text-xl">
+              <p
+                data-hero-text="subtitle"
+                className="max-w-[576px] font-display text-lg leading-7 font-medium tracking-[0.025em] text-brand-soft/90 sm:text-xl"
+              >
                 Midas – Gestión de Citas Premium para el Hombre Exigente.
-              </motion.p>
+              </p>
             </div>
 
-            <motion.p
-              {...enter(heroTimeline.body)}
+            <p
+              data-hero-text="body"
               className="max-w-[576px] text-base leading-[26px] font-light tracking-[0.01em] text-text-soft"
             >
               Donde la alquimia clásica de la barbería converge con la suntuosidad de la alta aristocracia. Cada trazo de
               navaja es un ejercicio de devoción, precisión quirúrgica y serenidad absoluta.
-            </motion.p>
+            </p>
 
-            <motion.div {...enter(heroTimeline.cta)} className="flex w-full flex-col gap-4 pt-1 sm:flex-row sm:items-center">
+            <div data-hero-text="cta" className="flex w-full flex-col gap-4 pt-1 sm:flex-row sm:items-center">
               <Magnetic>
                 <Button
                   {...(canBook ? { href: '#reservas' } : { to: staffHome.to })}
@@ -152,9 +135,9 @@ export default function HeroSection() {
                   <span className="w-[120px] text-center">Ver servicios</span>
                 </Button>
               </Magnetic>
-            </motion.div>
+            </div>
 
-            <motion.ul {...fade(heroTimeline.support)} className="flex flex-wrap gap-x-6 gap-y-2 pt-2">
+            <ul data-hero-support className="flex flex-wrap gap-x-6 gap-y-2 pt-2">
               {heroSpecs.map((spec) => (
                 <li
                   key={spec.label}
@@ -164,27 +147,25 @@ export default function HeroSection() {
                   {spec.label}
                 </li>
               ))}
-            </motion.ul>
+            </ul>
           </div>
 
           <figure
             className="relative mx-auto aspect-[461/577] w-full max-w-[461px] self-center overflow-clip bg-surface shadow-[0px_16px_48px_0px_rgba(0,0,0,0.9),0px_0px_24px_0px_rgba(212,175,55,0.15)] lg:col-span-5 lg:max-w-none"
           >
-            {/* La foto es el LCP: nunca arranca invisible, solo se asienta desde una escala mayor. */}
-            <motion.div
-              className="absolute inset-x-0 top-0 h-full lg:h-[110%]"
-              style={parallax ? { transform: imageShift } : undefined}
-            >
-              <motion.img
-                src={heroImage}
-                alt="Maestro barbero afeitando con navaja a un cliente en el salón Midas"
-                className="size-full object-cover grayscale"
-                fetchPriority="high"
-                initial={{ transform: `scale(${reduce ? 1 : scale.heroImageFrom})` }}
-                animate={{ transform: 'scale(1)' }}
-                transition={{ duration: duration.heroImage, ease: ease.out }}
-              />
-            </motion.div>
+            {/* Tres capas, una transformación cada una: parallax (shift), salida (zoom) y entrada (imagen).
+                La capa de parallax es un 10% más alta por arriba para que al bajar nunca asome el fondo. */}
+            <div data-hero-shift className="absolute inset-x-0 top-[-10%] h-[110%]">
+              <div data-hero-zoom className="size-full">
+                <img
+                  data-hero-image
+                  src={heroImage}
+                  alt="Maestro barbero afeitando con navaja a un cliente en el salón Midas"
+                  className="size-full object-cover grayscale"
+                  fetchPriority="high"
+                />
+              </div>
+            </div>
             <div aria-hidden className="absolute inset-0 bg-linear-to-t from-bg via-bg/30 to-bg/0" />
             <div aria-hidden className="absolute inset-0 border border-brand/40" />
             <div aria-hidden className="absolute inset-2 border border-brand/15" />

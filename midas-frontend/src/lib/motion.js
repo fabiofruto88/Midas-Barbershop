@@ -5,6 +5,7 @@ import dna from '../../design-dna.json'
 // Tokens de motion de Midas (fuente: design-dna.json). Ningún componente define curvas ni duraciones propias.
 export const { ease, duration, spring, distance, scale, stagger } = dna.motion
 export const heroTimeline = dna.motion.hero
+export const scroll = dna.motion.scroll
 
 // Las salidas son más rápidas que las entradas.
 export const exitDuration = (value) => value * duration.exitFactor
@@ -14,7 +15,7 @@ export const staggerDelay = (index, step = stagger.item) => Math.min(index * ste
 
 export const media = {
   finePointer: '(hover: hover) and (pointer: fine)',
-  desktop: '(min-width: 1024px)',
+  desktop: `(min-width: ${scroll.pin.breakpoint}px)`,
 }
 
 export function useMediaQuery(query) {
@@ -33,7 +34,7 @@ export function useMediaQuery(query) {
   )
 }
 
-// Qué motion permite el dispositivo: con reduced-motion solo opacidad; en móvil, sin imán ni parallax.
+// Qué motion de UI permite el dispositivo (el motion de scroll vive en lib/gsap.js).
 export function useMotionPrefs() {
   const reduce = Boolean(useReducedMotion())
   const desktop = useMediaQuery(media.desktop)
@@ -41,17 +42,7 @@ export function useMotionPrefs() {
   return {
     reduce,
     magnetic: finePointer && !reduce,
-    parallax: desktop && !reduce,
     shift: reduce ? 0 : desktop ? distance.md : distance.sm,
-  }
-}
-
-// Variantes para el hijo de un Reveal: entra desplazado un paso por detrás del contenedor.
-export function useRevealItem() {
-  const { shift } = useMotionPrefs()
-  return {
-    hidden: { opacity: 0, transform: `translateY(${shift / 2}px)` },
-    show: { opacity: 1, transform: 'translateY(0px)', transition: { duration: duration.reveal, ease: ease.out } },
   }
 }
 

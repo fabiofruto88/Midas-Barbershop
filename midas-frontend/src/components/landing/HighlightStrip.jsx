@@ -1,32 +1,41 @@
-import { useLayoutEffect, useRef } from 'react'
-import { animate, useInView, useReducedMotion } from 'motion/react'
+import { useRef } from 'react'
 import { highlights } from '../../content/landing'
-import { duration, ease } from '../../lib/motion'
+import { conditions, gsap, useGSAP } from '../../lib/gsap'
+import { duration, scroll } from '../../lib/motion'
 
 const number = new Intl.NumberFormat('en-US')
 
 // Cuenta desde 0 hasta la cifra la primera vez que entra en pantalla. Los lectores de pantalla
-// leen solo el valor final; con reduced-motion se muestra directamente.
+// leen solo el valor final; con reduced-motion se muestra directamente. El texto lo escribe solo
+// GSAP (no React), para que la animación y el render no se pisen.
 function CountUp({ value, count }) {
   const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '0px 0px -40px 0px' })
-  const reduce = useReducedMotion()
   const suffix = value.replace(/^[\d.,]+/, '')
 
-  // El texto lo escribe solo este efecto (no React), para que la animación y el render no se pisen.
-  useLayoutEffect(() => {
-    const node = ref.current
-    node.textContent = reduce ? value : `0${suffix}`
-    if (!inView || reduce) return
-    const controls = animate(0, count, {
-      duration: duration.counter,
-      ease: ease.out,
-      onUpdate: (latest) => {
-        node.textContent = `${number.format(Math.round(latest))}${suffix}`
-      },
-    })
-    return () => controls.stop()
-  }, [inView, reduce, value, count, suffix])
+  useGSAP(
+    () => {
+      const node = ref.current
+      const mm = gsap.matchMedia()
+      mm.add(conditions.reduce, () => {
+        node.textContent = value
+      })
+      mm.add(`${conditions.desktop}, ${conditions.mobile}`, () => {
+        const state = { value: 0 }
+        const render = () => {
+          node.textContent = `${number.format(Math.round(state.value))}${suffix}`
+        }
+        render()
+        gsap.to(state, {
+          value: count,
+          duration: duration.counter,
+          onUpdate: render,
+          scrollTrigger: { trigger: node, start: scroll.revealStart, end: 'max', once: true },
+        })
+      })
+      return () => mm.revert()
+    },
+    { scope: ref },
+  )
 
   return (
     <>

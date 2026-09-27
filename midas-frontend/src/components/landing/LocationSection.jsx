@@ -1,6 +1,7 @@
 import { contact, schedule } from "../../content/landing";
 import SectionHeading, { Accent } from "./SectionHeading";
 import Reveal from "./Reveal";
+import { stagger } from "../../lib/motion";
 
 const infoLabel =
   "text-[9px] leading-3 font-bold tracking-[0.1em] text-muted uppercase";
@@ -82,7 +83,7 @@ export default function LocationSection() {
         </Reveal>
 
         <Reveal
-          delay={0.08}
+          delay={stagger.item}
           className="flex flex-col self-center border border-brand/30 bg-surface p-2 drop-shadow-[0px_12px_20px_rgba(0,0,0,0.8)] lg:col-span-7"
         >
           <div className="relative h-[400px] overflow-clip bg-[#353437]">

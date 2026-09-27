@@ -58,6 +58,26 @@ export const highlights = [
   { value: "1 a 1", label: "Atención personalizada" },
 ];
 
+// Los cuatro tiempos de la experiencia (sección fijada "El ritual Midas").
+export const ritualSteps = [
+  {
+    title: "Reserva",
+    text: "Elige barbero, servicio y hora en minutos, sin llamadas ni filas.",
+  },
+  {
+    title: "Consulta",
+    text: "Tu barbero estudia tu rostro, tu cabello y tu estilo antes del primer corte.",
+  },
+  {
+    title: "Ritual",
+    text: "Navaja clásica, toalla caliente y precisión milimétrica, con atención exclusiva durante toda la sesión.",
+  },
+  {
+    title: "Legado",
+    text: "Sales impecable y puedes calificar tu experiencia desde \"Mis citas\".",
+  },
+];
+
 // Perfil editorial de los barberos por posición; el nombre y la reserva salen del API.
 export const barberProfiles = [
   {

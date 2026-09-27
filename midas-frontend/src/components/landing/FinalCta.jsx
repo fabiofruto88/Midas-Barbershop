@@ -1,10 +1,16 @@
+import { useRef } from 'react'
 import iconBadge from '../../assets/landing/icon-verified-badge.svg'
 import Button from '../ui/Button'
 import Magnetic from '../ui/Magnetic'
+import { useScrubText } from '../../lib/gsap'
 import Icon from './Icon'
 import Reveal from './Reveal'
 
 export default function FinalCta() {
+  const titleRef = useRef(null)
+  // El titular se "enciende" palabra a palabra al bajar hacia él.
+  useScrubText(titleRef, { gradient: true })
+
   return (
     <section
       aria-labelledby="cta-title"
@@ -15,8 +21,9 @@ export default function FinalCta() {
           <Icon src={iconBadge} className="h-[21px] w-[22px]" />
         </span>
         <h2
+          ref={titleRef}
           id="cta-title"
-          className="bg-[linear-gradient(to_right,#fff2b2,#f2ca50,#b88728)] bg-clip-text font-display text-[34px] leading-10 font-semibold tracking-[0.025em] text-transparent uppercase sm:text-[46px]"
+          className="text-gold font-display text-[34px] leading-10 font-semibold tracking-[0.025em] uppercase sm:text-[46px]"
         >
           Reclama tu lugar en el trono
         </h2>

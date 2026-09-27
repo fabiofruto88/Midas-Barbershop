@@ -1,6 +1,9 @@
+import { useEffect, useRef } from 'react'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import { motion } from 'motion/react'
 import { distance, duration, ease, useMotionPrefs } from '../lib/motion'
+import { refreshScroll } from '../lib/gsap'
+import ScrollProgress from '../components/landing/ScrollProgress'
 import SiteHeader from '../components/landing/SiteHeader'
 import SiteFooter from '../components/landing/SiteFooter'
 import CartDrawer from '../components/shop/CartDrawer'
@@ -22,15 +25,28 @@ function PageTransition({ children }) {
       initial={isInitialLoad ? false : { opacity: 0, y: Math.min(shift, distance.sm) }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: duration.route, ease: ease.out }}
+      // ScrollTrigger midió con el desplazamiento de la entrada: recalcula al terminar.
+      onAnimationComplete={() => refreshScroll(0)}
     >
       {children}
     </motion.div>
   )
 }
 
+// Cuando el contenido cambia de alto (datos del API, imágenes, filtros), los ScrollTriggers se recalculan.
+function useScrollRefreshOnResize(ref) {
+  useEffect(() => {
+    const observer = new ResizeObserver(() => refreshScroll())
+    observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [ref])
+}
+
 export default function RootLayout() {
   // La landing ocupa todo el ancho y su hero pasa por debajo del header fijo.
   const isHome = useLocation().pathname === '/'
+  const mainRef = useRef(null)
+  useScrollRefreshOnResize(mainRef)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -42,7 +58,10 @@ export default function RootLayout() {
       </a>
       <SiteHeader />
 
+      {isHome && <ScrollProgress />}
+
       <main
+        ref={mainRef}
         id="contenido"
         tabIndex={-1}
         className={
