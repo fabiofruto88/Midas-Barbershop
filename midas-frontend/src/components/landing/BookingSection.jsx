@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { useQueries } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, motion, useScroll, useTransform } from 'motion/react'
 import { availabilityQueryOptions, useBarbers, useServices } from '../../hooks/useCatalog'
 import { useBookingStore } from '../../store/bookingStore'
 import { appointmentsApi } from '../../services/midas'
@@ -9,6 +9,7 @@ import { queryKeys } from '../../lib/queryClient'
 import { formatPrice, nextDays, parseDate, toDateString, businessToday } from '../../lib/format'
 import { barberProfiles } from '../../content/landing'
 import { barberPortrait } from '../../lib/barberPortrait'
+import { distance, duration, ease, exitDuration, spring, useMotionPrefs } from '../../lib/motion'
 import iconRadioChecked from '../../assets/landing/icon-radio-checked.svg'
 import iconRadio from '../../assets/landing/icon-radio.svg'
 import SectionHeading, { Accent } from './SectionHeading'
@@ -16,10 +17,9 @@ import Icon from './Icon'
 import Reveal from './Reveal'
 
 const DAYS_SHOWN = 5
-const ease = [0.23, 1, 0.32, 1]
 
 const label = 'text-[9px] leading-3 font-bold tracking-[0.2em] text-muted uppercase'
-const option = 'pressable border text-[9px] leading-3 font-bold uppercase'
+const option = 'pressable relative border text-[9px] leading-3 font-bold uppercase'
 const optionIdle = 'border-line/30 bg-card text-text hover:border-brand/50'
 
 // Próximos días hábiles (el domingo es solo para citas VIP).
@@ -41,6 +41,11 @@ const dayMonth = (value) => {
 const slotTime = (slot) => {
   const [hours, minutes] = slot.split(':').map(Number)
   return new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit' }).format(new Date(2000, 0, 1, hours, minutes))
+}
+
+// Fondo de la opción elegida: se desliza de una opción a otra en lugar de saltar (layoutId).
+function SelectedFill({ id, className }) {
+  return <motion.span layoutId={id} aria-hidden className={`absolute inset-0 ${className}`} transition={spring.layout} />
 }
 
 function Skeleton({ className }) {
@@ -123,6 +128,13 @@ function BarberList({ barbers, isPending, error, barberId, onSelect }) {
 
 export default function BookingSection() {
   const navigate = useNavigate()
+  const sectionRef = useRef(null)
+  const { parallax } = useMotionPrefs()
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] })
+  const haloShift = useTransform(
+    scrollYProgress,
+    (progress) => `translate3d(0, ${(progress * 2 - 1) * distance.halo}px, 0)`,
+  )
   const { data: barbers, isPending: loadingBarbers, error: barbersError } = useBarbers()
   const { data: services, isPending: loadingServices, error: servicesError } = useServices()
   const { serviceId, barberId, date, timeSlot, selectService, selectBarber, selectDate, selectTimeSlot } =
@@ -181,12 +193,15 @@ export default function BookingSection() {
 
   return (
     <section
+      ref={sectionRef}
       id="barberos"
       aria-labelledby="barberos-title"
       className="relative overflow-clip bg-bg py-20 lg:py-28"
     >
-      <div
+      {/* Halo dorado con parallax sutil (solo desktop); -translate-1/2 usa `translate` y se compone con él. */}
+      <motion.div
         aria-hidden
+        style={parallax ? { transform: haloShift } : undefined}
         className="absolute top-1/2 left-1/2 h-[500px] w-[900px] -translate-1/2 rounded-full bg-brand/5 blur-[70px]"
       />
       <div className="relative mx-auto flex max-w-[1440px] flex-col items-center gap-10 px-4 sm:px-8 xl:px-16">
@@ -268,10 +283,11 @@ export default function BookingSection() {
                         aria-pressed={selected}
                         onClick={() => selectService(item.id)}
                         className={`${option} px-2 py-[11px] tracking-[0.05em] ${
-                          selected ? 'border-brand bg-brand text-on-brand' : optionIdle
+                          selected ? 'border-brand text-on-brand' : optionIdle
                         }`}
                       >
-                        {item.name}
+                        {selected && <SelectedFill id="reserva-servicio" className="bg-brand" />}
+                        <span className="relative">{item.name}</span>
                       </button>
                     )
                   })}
@@ -362,12 +378,13 @@ export default function BookingSection() {
                           aria-pressed={selected}
                           onClick={() => selectTimeSlot(slot)}
                           className={`${option} px-2 py-[11px] tracking-[0.2em] ${
-                            selected
-                              ? 'border-brand bg-linear-to-r from-brand-strong to-brand text-on-brand drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)]'
-                              : optionIdle
+                            selected ? 'border-brand text-on-brand drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)]' : optionIdle
                           }`}
                         >
-                          {slotTime(slot)}
+                          {selected && (
+                            <SelectedFill id="reserva-hora" className="bg-linear-to-r from-brand-strong to-brand" />
+                          )}
+                          <span className="relative">{slotTime(slot)}</span>
                         </button>
                       )
                     })}
@@ -384,8 +401,8 @@ export default function BookingSection() {
                     key={summary}
                     initial={{ opacity: 0, filter: 'blur(2px)' }}
                     animate={{ opacity: 1, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, filter: 'blur(2px)' }}
-                    transition={{ duration: 0.15, ease }}
+                    exit={{ opacity: 0, filter: 'blur(2px)', transition: { duration: exitDuration(duration.press), ease: ease.out } }}
+                    transition={{ duration: duration.press, ease: ease.out }}
                     className="font-medium text-brand sm:text-right"
                   >
                     {summary || '—'}

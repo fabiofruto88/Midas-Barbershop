@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { reviewsApi } from '../../services/midas'
 import { useBookingAccess } from '../../hooks/useAuth'
 import { queryKeys } from '../../lib/queryClient'
+import { staggerDelay } from '../../lib/motion'
 import { Stars } from '../ui/StarRating'
 import SectionHeading, { Accent } from './SectionHeading'
 import Reveal from './Reveal'
@@ -21,8 +22,8 @@ function TestimonialCard({ review, index, featured }) {
   return (
     <Reveal
       as="figure"
-      delay={index * 0.06}
-      className={`flex h-full flex-col justify-between border bg-card p-6 ${
+      delay={staggerDelay(index)}
+      className={`lift relative flex h-full flex-col justify-between border bg-card p-6 ${
         featured ? 'border-brand/40 drop-shadow-[0px_8px_15px_rgba(212,175,55,0.1)]' : 'border-line/30'
       }`}
     >

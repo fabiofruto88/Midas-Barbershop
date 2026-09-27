@@ -51,9 +51,10 @@ export const heroSpecs = [
 ];
 
 export const highlights = [
-  { value: "1,400+", label: "Caballeros satisfechos" },
-  { value: "8 años", label: "De experiencia en barbería" },
-  { value: "100%", label: "Privacidad confidencial" },
+  // count: cifras que cuentan hacia arriba al aparecer (el resto del valor se conserva como sufijo).
+  { value: "1,400+", count: 1400, label: "Caballeros satisfechos" },
+  { value: "8 años", count: 8, label: "De experiencia en barbería" },
+  { value: "100%", count: 100, label: "Privacidad confidencial" },
   { value: "1 a 1", label: "Atención personalizada" },
 ];
 

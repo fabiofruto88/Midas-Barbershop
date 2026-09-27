@@ -1,4 +1,5 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { shake } from '../../lib/motion'
 
 function EyeIcon({ open }) {
   return (
@@ -17,21 +18,35 @@ export default function Field({ label, error, hint, className = '', type = 'text
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined
   const isPassword = type === 'password'
 
+  // Los formularios asignan errores al enviar: sacudir cuando aparece uno es feedback del envío,
+  // nunca de lo que se está escribiendo.
+  const boxRef = useRef(null)
+  const hadError = useRef(Boolean(error))
+  useEffect(() => {
+    if (error && !hadError.current) shake(boxRef.current)
+    hadError.current = Boolean(error)
+  }, [error])
+
   return (
     <div className={`space-y-1.5 ${className}`}>
       <label htmlFor={id} className="block text-sm font-medium">
         {label}
       </label>
-      <div className="relative">
+      <div ref={boxRef} className="relative">
         <input
           id={id}
           type={isPassword && revealed ? 'text' : type}
           aria-invalid={Boolean(error)}
           aria-describedby={describedBy}
-          className={`w-full rounded-control border border-border bg-surface-2 px-3.5 py-2.5 text-sm placeholder:text-muted/60 focus:border-brand focus:outline-none aria-invalid:border-danger ${
+          className={`peer w-full rounded-control border border-border bg-surface-2 px-3.5 py-2.5 text-sm placeholder:text-muted/60 focus:border-brand focus:outline-none aria-invalid:border-danger ${
             isPassword ? 'pr-11' : ''
           }`}
           {...inputProps}
+        />
+        {/* Línea dorada que crece desde el centro al enfocar (solo `scale`). */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-center scale-x-0 bg-brand transition-[scale] duration-(--duration-menu) ease-(--ease-out) peer-focus:scale-x-100 peer-aria-invalid:bg-danger motion-reduce:transition-none"
         />
         {isPassword && (
           <button

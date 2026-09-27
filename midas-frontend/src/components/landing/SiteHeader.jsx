@@ -10,8 +10,24 @@ import Button from "../ui/Button";
 import Icon from "./Icon";
 import CartButton from "../shop/CartButton";
 import { cartCount, useCartStore } from "../../store/cartStore";
+import { distance, duration, ease, exitDuration, scale, spring } from "../../lib/motion";
 
-const ease = [0.23, 1, 0.32, 1];
+const activeLink =
+  "relative pt-1 pb-[6px] text-base leading-6 font-bold text-brand uppercase";
+const idleLink =
+  "hit-area relative py-1 text-[11px] leading-[14px] font-semibold tracking-[0.18em] text-text-soft uppercase transition-colors duration-150 hover:text-brand";
+
+// Subrayado del enlace activo: se desliza entre enlaces al cambiar de sección (layoutId).
+function Underline() {
+  return (
+    <motion.span
+      layoutId="nav-underline"
+      aria-hidden
+      className="absolute inset-x-0 bottom-0 h-px bg-brand"
+      transition={spring.layout}
+    />
+  );
+}
 
 const roleLinks = {
   CLIENT: [{ to: "/mis-citas", label: "Mis citas" }],
@@ -133,10 +149,14 @@ function UserMenu({ user, onLogout }) {
           <motion.div
             id={menuId}
             role="menu"
-            initial={{ opacity: 0, scale: 0.97, y: -4 }}
+            initial={{ opacity: 0, scale: scale.enter, y: -distance.xs }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.12 } }}
-            transition={{ duration: 0.18, ease }}
+            exit={{
+              opacity: 0,
+              scale: scale.enter,
+              transition: { duration: exitDuration(duration.menu), ease: ease.out },
+            }}
+            transition={{ duration: duration.menu, ease: ease.out }}
             className="absolute top-full right-0 mt-3 w-56 origin-top-right border border-brand/20 bg-surface py-2 shadow-[0px_12px_36px_0px_rgba(0,0,0,0.8)]"
           >
             <p className="truncate border-b border-line/30 px-4 pb-2 text-[9px] leading-3 font-bold tracking-[0.1em] text-muted uppercase">
@@ -212,26 +232,20 @@ export default function SiteHeader() {
                 key={link.id}
                 href={href(link.id)}
                 aria-current={current ? "location" : undefined}
-                className={
-                  current
-                    ? "border-b border-brand pt-1 pb-[5px] text-base leading-6 font-bold text-brand uppercase"
-                    : "hit-area py-1 text-[11px] leading-[14px] font-semibold tracking-[0.18em] text-text-soft uppercase transition-colors duration-150 hover:text-brand"
-                }
+                className={current ? activeLink : idleLink}
               >
                 {link.label}
+                {current && <Underline />}
               </a>
             );
           })}
           <Link
             to="/tienda"
             aria-current={isShop ? "page" : undefined}
-            className={
-              isShop
-                ? "border-b border-brand pt-1 pb-[5px] text-base leading-6 font-bold text-brand uppercase"
-                : "hit-area py-1 text-[11px] leading-[14px] font-semibold tracking-[0.18em] text-text-soft uppercase transition-colors duration-150 hover:text-brand"
-            }
+            className={isShop ? activeLink : idleLink}
           >
             Tienda
+            {isShop && <Underline />}
           </Link>
         </nav>
 
@@ -256,13 +270,13 @@ export default function SiteHeader() {
           >
             <span aria-hidden className="relative block h-2.5 w-3.5">
               <span
-                className={`absolute left-0 h-px w-full bg-current transition-transform duration-200 ${menuOpen ? "top-1/2 rotate-45" : "top-0"}`}
+                className={`absolute top-0 left-0 h-px w-full bg-current transition-[translate,rotate] duration-(--duration-hover) ease-(--ease-in-out) motion-reduce:transition-none ${menuOpen ? "translate-y-[5px] rotate-45" : ""}`}
               />
               <span
-                className={`absolute top-1/2 left-0 h-px w-full bg-current transition-opacity duration-150 ${menuOpen ? "opacity-0" : ""}`}
+                className={`absolute top-1/2 left-0 h-px w-full bg-current transition-opacity duration-(--duration-press) ease-(--ease-out) ${menuOpen ? "opacity-0" : ""}`}
               />
               <span
-                className={`absolute left-0 h-px w-full bg-current transition-transform duration-200 ${menuOpen ? "top-1/2 -rotate-45" : "bottom-0"}`}
+                className={`absolute bottom-0 left-0 h-px w-full bg-current transition-[translate,rotate] duration-(--duration-hover) ease-(--ease-in-out) motion-reduce:transition-none ${menuOpen ? "-translate-y-1 -rotate-45" : ""}`}
               />
             </span>
           </button>
@@ -274,10 +288,14 @@ export default function SiteHeader() {
           <motion.nav
             id="menu-movil"
             aria-label="Principal"
-            initial={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -distance.sm }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.22, ease }}
+            exit={{
+              opacity: 0,
+              y: -distance.sm,
+              transition: { duration: exitDuration(duration.menu), ease: ease.out },
+            }}
+            transition={{ duration: duration.menu, ease: ease.out }}
             className="border-t border-brand/20 bg-bg px-4 pt-2 pb-6 sm:px-8 xl:hidden"
           >
             <ul>

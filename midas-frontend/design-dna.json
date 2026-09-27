@@ -1,0 +1,49 @@
+{
+  "$comment": "ADN de diseño de Midas. Color, tipografía y radios viven en src/index.css (@theme); el motion se lee desde aquí en src/lib/motion.js y se refleja en :root de index.css.",
+  "color": {
+    "source": "src/index.css @theme",
+    "accent": "brand #f2ca50",
+    "rule": "El dorado se reserva para acentos y CTA; superficies en la escala bg → surface-2."
+  },
+  "typography": {
+    "display": "Playfair Display 500–700",
+    "body": "Montserrat 300–700",
+    "minSize": "9px solo en etiquetas en mayúsculas con tracking"
+  },
+  "spacing": {
+    "grid": 4,
+    "section": "py-20 / lg:py-28",
+    "gutter": "px-4 sm:px-8 xl:px-16"
+  },
+  "motion": {
+    "personality": "preciso y ceremonial: entradas decididas, sin rebote, salidas más rápidas",
+    "duration": {
+      "press": 0.16,
+      "hover": 0.2,
+      "menu": 0.22,
+      "route": 0.24,
+      "drawer": 0.32,
+      "fade": 0.3,
+      "reveal": 0.5,
+      "heroWord": 0.55,
+      "heroImage": 1,
+      "counter": 1.4,
+      "exitFactor": 0.65
+    },
+    "ease": {
+      "out": [0.23, 1, 0.32, 1],
+      "inOut": [0.77, 0, 0.175, 1],
+      "drawer": [0.32, 0.72, 0, 1]
+    },
+    "spring": {
+      "layout": { "type": "spring", "duration": 0.45, "bounce": 0.12 },
+      "magnetic": { "stiffness": 220, "damping": 18, "mass": 0.4 }
+    },
+    "distance": { "xs": 4, "sm": 8, "md": 16, "lg": 24, "lift": -4, "magnetMax": 8, "parallax": 8, "halo": 40 },
+    "scale": { "press": 0.97, "enter": 0.97, "imageHover": 1.03, "heroImageFrom": 1.06 },
+    "stagger": { "word": 0.04, "item": 0.06, "maxTotal": 0.3 },
+    "hero": { "subtitle": 0.35, "body": 0.45, "cta": 0.55, "support": 0.65 },
+    "reducedMotion": "Solo opacidad: sin parallax, imán, contador ni desplazamientos.",
+    "mobile": "Sin hover persistente, sin imán ni parallax; reveals con distancia sm."
+  }
+}

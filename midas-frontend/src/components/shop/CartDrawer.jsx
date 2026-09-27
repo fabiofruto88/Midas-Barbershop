@@ -7,13 +7,13 @@ import { useShopProducts } from '../../hooks/useCatalog'
 import { formatPrice } from '../../lib/format'
 import { buildOrderMessage, MAX_CUSTOMER_NAME, MAX_ORDER_NOTE, whatsappOrderUrl } from '../../lib/whatsapp'
 import { useCartStore } from '../../store/cartStore'
+import { duration, ease, exitDuration } from '../../lib/motion'
 import Button from '../ui/Button'
 import Field from '../ui/Field'
 import { CloseIcon, WhatsAppIcon } from './icons'
 import ProductImage from './ProductImage'
 import QuantityStepper from './QuantityStepper'
 
-const ease = [0.23, 1, 0.32, 1]
 
 // Pone el carrito al día con el catálogo: quita lo que el admin ocultó o borró y actualiza precios.
 function CartSync() {
@@ -70,7 +70,7 @@ export default function CartDrawer() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: duration.hover, ease: ease.out }}
               onClick={close}
             />
             <CartPanel onClose={close} />
@@ -110,8 +110,8 @@ function CartPanel({ onClose }) {
       className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col border-l border-brand/20 bg-surface shadow-[0px_12px_36px_0px_rgba(0,0,0,0.8)]"
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
-      exit={{ x: '100%', transition: { duration: 0.2, ease } }}
-      transition={{ duration: 0.32, ease }}
+      exit={{ x: '100%', transition: { duration: exitDuration(duration.drawer), ease: ease.drawer } }}
+      transition={{ duration: duration.drawer, ease: ease.drawer }}
     >
       <header className="flex items-center justify-between gap-4 border-b border-line/30 px-5 py-4">
         <div>

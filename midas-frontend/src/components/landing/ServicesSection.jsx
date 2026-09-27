@@ -2,6 +2,7 @@ import { useServices } from '../../hooks/useCatalog'
 import { useBookingStore } from '../../store/bookingStore'
 import { useBookingAccess } from '../../hooks/useAuth'
 import { formatPrice } from '../../lib/format'
+import { staggerDelay } from '../../lib/motion'
 import iconCrown from '../../assets/landing/icon-crown.svg'
 import iconScissors from '../../assets/landing/icon-scissors.svg'
 import iconSpa from '../../assets/landing/icon-spa.svg'
@@ -28,12 +29,12 @@ function ServiceCard({ service, index, featured }) {
   return (
     <Reveal
       as="article"
-      delay={index * 0.06}
+      delay={staggerDelay(index)}
       aria-labelledby={titleId}
-      className={`relative flex h-full flex-col justify-between ${
+      className={`lift relative flex h-full flex-col justify-between ${
         featured
           ? 'border-2 border-brand/70 bg-surface-2 p-6 drop-shadow-[0px_12px_20px_rgba(212,175,55,0.2)]'
-          : 'border border-line/30 bg-card p-6 transition-colors duration-200 hover:border-brand/40'
+          : 'border border-line/30 bg-card p-6 hover:border-brand/40'
       }`}
     >
       {featured ? (
@@ -102,7 +103,7 @@ function ServiceCard({ service, index, featured }) {
             Elegir<span className="sr-only"> {service.name}</span>
             <Icon
               src={iconChevron}
-              className="h-[7px] w-[4.317px] transition-transform duration-200 ease-out group-hover/link:translate-x-0.5 motion-reduce:transition-none"
+              className="h-[7px] w-[4.317px] transition-[translate] duration-(--duration-hover) ease-(--ease-out) [@media(hover:hover)_and_(pointer:fine)]:group-hover/link:translate-x-0.5 motion-reduce:transition-none"
             />
           </a>
         )}

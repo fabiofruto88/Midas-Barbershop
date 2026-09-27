@@ -43,7 +43,22 @@
   --radius-card: 0;
   --radius-control: 0;
 
+  /* Curvas de motion (espejo de design-dna.json → motion.ease). */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Duraciones y distancias de motion (espejo de design-dna.json → motion). */
+:root {
+  --duration-press: 160ms;
+  --duration-hover: 200ms;
+  --duration-menu: 220ms;
+  --duration-fade: 300ms;
+  --duration-reveal: 500ms;
+  --distance-lift: -4px;
+  --scale-press: 0.97;
+  --scale-image-hover: 1.03;
 }
 
 /* Degradado dorado de los botones principales. */
@@ -64,12 +79,41 @@
 }
 
 /* Feedback de pulsación en elementos presionables. */
+/* Usa la propiedad `scale` para componerse con los transforms de Motion y de `lift`. */
 @utility pressable {
-  transition-property: transform, background-color, border-color, color, box-shadow, filter;
-  transition-duration: 160ms;
+  transition-property: scale, background-color, border-color, color, filter;
+  transition-duration: var(--duration-press);
   transition-timing-function: var(--ease-out);
   &:active:not(:disabled) {
-    transform: scale(0.97);
+    scale: var(--scale-press);
+  }
+}
+
+/*
+ * Elevación al pasar el cursor (solo punteros finos: en táctil no queda "pegada").
+ * La sombra vive en un pseudo-elemento y se anima su opacidad, nunca box-shadow.
+ * Requiere `position: relative` en el elemento.
+ */
+@utility lift {
+  transition-property: translate, border-color, background-color;
+  transition-duration: var(--duration-hover);
+  transition-timing-function: var(--ease-out);
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.85), 0 0 18px 0 rgb(212 175 55 / 0.14);
+    opacity: 0;
+    transition: opacity var(--duration-hover) var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      translate: 0 var(--distance-lift);
+    }
+    &:hover::after {
+      opacity: 1;
+    }
   }
 }
 
@@ -85,7 +129,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pressable:active:not(:disabled) {
-    transform: none;
+    scale: none;
+  }
+  .lift:hover {
+    translate: none;
   }
 }
 

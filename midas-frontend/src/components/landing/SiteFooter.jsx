@@ -1,7 +1,8 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Link } from "react-router";
 import { contact, schedule } from "../../content/landing";
 import { rules } from "../../lib/validation";
+import { shake } from "../../lib/motion";
 import emblem from "../../assets/landing/midas-emblem.jpg";
 import iconVerified from "../../assets/landing/icon-verified-dim.svg";
 import iconDiamond from "../../assets/landing/icon-diamond-social.svg";
@@ -21,11 +22,15 @@ function Newsletter() {
   const [status, setStatus] = useState(null); // { tone, message }
   const inputId = useId();
   const messageId = useId();
+  const boxRef = useRef(null);
 
   const submit = (event) => {
     event.preventDefault();
     const error = rules.email(email.trim());
-    if (error) return setStatus({ tone: "error", message: error });
+    if (error) {
+      shake(boxRef.current);
+      return setStatus({ tone: "error", message: error });
+    }
     // TODO: conectar con el endpoint de suscripción cuando exista en el backend.
     // Mientras tanto no se confirma una suscripción que no se guarda.
     setStatus({
@@ -36,7 +41,7 @@ function Newsletter() {
 
   return (
     <form noValidate onSubmit={submit} className="flex flex-col gap-2">
-      <div className="relative">
+      <div ref={boxRef} className="relative">
         <label htmlFor={inputId} className="sr-only">
           Correo electrónico
         </label>
@@ -49,7 +54,12 @@ function Newsletter() {
           placeholder="Su correo distinguido"
           aria-invalid={status?.tone === "error" || undefined}
           aria-describedby={status ? messageId : undefined}
-          className="w-full border-b border-brand/40 bg-surface px-2 pt-[9px] pr-8 pb-2.5 text-xs text-text transition-colors placeholder:text-muted/60 focus:border-brand focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="peer w-full border-b border-brand/40 bg-surface px-2 pt-[9px] pr-8 pb-2.5 text-xs text-text transition-colors placeholder:text-muted/60 focus:border-brand focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        />
+        {/* Línea dorada que crece desde el centro al enfocar (solo `scale`). */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-center scale-x-0 bg-brand transition-[scale] duration-(--duration-menu) ease-(--ease-out) peer-focus:scale-x-100 motion-reduce:transition-none"
         />
         <button
           type="submit"

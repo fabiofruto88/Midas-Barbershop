@@ -1,4 +1,5 @@
 import { useDeferredValue, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useShopCategories, useShopProducts } from '../hooks/useCatalog'
 import { useCart } from '../hooks/useCart'
 import { formatPrice } from '../lib/format'
@@ -134,13 +135,14 @@ export default function ShopPage() {
   )
 }
 
-// Barra fija con el resumen del pedido mientras se navega la tienda.
+// Barra fija con el resumen del pedido mientras se navega la tienda. Va en un portal para que la
+// transición de página (que usa transform) no la saque de su posición fija.
 function OrderBar() {
   const { count, total } = useCart()
   const open = useCartStore((state) => state.open)
   if (count === 0) return null
 
-  return (
+  return createPortal(
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-brand/30 bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-[12px]">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
         <div className="flex items-center gap-3">
@@ -157,6 +159,7 @@ function OrderBar() {
           Ver pedido
         </Button>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

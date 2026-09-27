@@ -4,10 +4,10 @@ import { AnimatePresence, motion } from 'motion/react'
 import { resultsApi } from '../../services/midas'
 import { queryKeys } from '../../lib/queryClient'
 import { optimizedImageUrl } from '../../lib/images'
+import { duration, ease, exitDuration, scale, spring } from '../../lib/motion'
 import SectionHeading, { Accent } from './SectionHeading'
 import Reveal from './Reveal'
 
-const ease = [0.23, 1, 0.32, 1]
 const ALL = 'Todos'
 const MAX_FILTERS = 4
 
@@ -19,20 +19,20 @@ function GalleryCard({ item }) {
   return (
     <motion.figure
       layout
-      initial={{ opacity: 0, scale: 0.97 }}
+      initial={{ opacity: 0, scale: scale.enter }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.15 } }}
-      transition={{ duration: 0.3, ease }}
+      exit={{ opacity: 0, scale: scale.enter, transition: { duration: exitDuration(duration.fade), ease: ease.out } }}
+      transition={{ duration: duration.fade, ease: ease.out }}
       className="group relative flex flex-col overflow-clip border border-line/20 bg-surface-2 p-px"
     >
       <img
         src={optimizedImageUrl(item.imageUrl, { width: 600, height: 720 })}
         alt={`${service.name} realizado por ${barber.name}`}
         loading="lazy"
-        className="h-[358px] w-full object-cover grayscale transition-transform duration-500 ease-(--ease-out) [@media(hover:hover)]:group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+        className="h-[358px] w-full object-cover grayscale transition-[scale] duration-(--duration-reveal) ease-(--ease-out) [@media(hover:hover)_and_(pointer:fine)]:group-hover:scale-(--scale-image-hover) motion-reduce:transition-none motion-reduce:group-hover:scale-100"
       />
       <div aria-hidden className="absolute inset-0 bg-linear-to-t from-bg via-bg/20 to-bg/0 opacity-80" />
-      <figcaption className="absolute inset-x-0 -bottom-4 flex flex-col p-4 transition-transform duration-300 ease-(--ease-out) [@media(hover:hover)]:group-hover:-translate-y-4 motion-reduce:transition-none">
+      <figcaption className="absolute inset-x-0 -bottom-4 flex flex-col p-4 transition-[translate] duration-(--duration-fade) ease-(--ease-out) [@media(hover:hover)_and_(pointer:fine)]:group-hover:-translate-y-4 motion-reduce:transition-none">
         <span className="text-[9px] leading-3 font-bold tracking-[0.25em] text-brand uppercase">Resultado real</span>
         <span className="pb-2 font-display text-xl leading-7 font-medium text-text">{service.name}</span>
         <span className="grid grid-cols-2 gap-4 border-t border-line/30 pt-2 text-xs leading-[18px] tracking-[0.02em]">
@@ -95,11 +95,20 @@ export default function GallerySection() {
                     type="button"
                     aria-pressed={selected}
                     onClick={() => setFilter(name)}
-                    className={`pressable px-4 py-1.5 text-[9px] leading-3 font-bold tracking-[0.05em] uppercase ${
-                      selected ? 'bg-brand text-on-brand' : 'text-muted hover:text-brand'
+                    className={`pressable relative px-4 py-1.5 text-[9px] leading-3 font-bold tracking-[0.05em] uppercase ${
+                      selected ? 'text-on-brand' : 'text-muted hover:text-brand'
                     }`}
                   >
-                    {name}
+                    {/* El fondo activo se desliza al filtro elegido. */}
+                    {selected && (
+                      <motion.span
+                        layoutId="galeria-filtro"
+                        aria-hidden
+                        className="absolute inset-0 bg-brand"
+                        transition={spring.layout}
+                      />
+                    )}
+                    <span className="relative">{name}</span>
                   </button>
                 )
               })}

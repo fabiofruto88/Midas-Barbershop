@@ -1,5 +1,6 @@
 import iconBadge from '../../assets/landing/icon-verified-badge.svg'
 import Button from '../ui/Button'
+import Magnetic from '../ui/Magnetic'
 import Icon from './Icon'
 import Reveal from './Reveal'
 
@@ -24,14 +25,16 @@ export default function FinalCta() {
           Reserve hoy su cita de oro.
         </p>
         <div className="pt-2">
-          <Button
-            to="/reservar"
-            variant="gold"
-            size="lgFlush"
-            className="px-10 py-4 tracking-[0.25em] drop-shadow-[0px_8px_15px_rgba(212,175,55,0.4)]"
-          >
-            Agendar mi experiencia
-          </Button>
+          <Magnetic>
+            <Button
+              to="/reservar"
+              variant="gold"
+              size="lgFlush"
+              className="px-10 py-4 tracking-[0.25em] drop-shadow-[0px_8px_15px_rgba(212,175,55,0.4)]"
+            >
+              Agendar mi experiencia
+            </Button>
+          </Magnetic>
         </div>
       </Reveal>
     </section>
